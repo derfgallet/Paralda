@@ -9,12 +9,6 @@ module.exports = {
 
 // Source : http://www.alcyone.org.uk/ssm/protocol.html
 // UART Settings : 1953 bauds / 8 bits data / 1 bit stop / parity Even
-const SerialDev='/dev/ttyUSB0'; // USB Serial to TTL dongle
-// const SerialDev='/dev/ttyS0'; // RPi onBoard UART
-const SerialBaudRate = 1953;
-const SerialParity = "even";
-const SerialBitStop = 1;
-const SerialDataBits = 8;
 //
 // Commands :
 // 12	00	00	00	Stop
@@ -25,6 +19,13 @@ const SerialDataBits = 8;
 // AA	msb	lsb	data	Write data to address
 // AB	00	lsb		Read data from Cruise address
 // 00	46	48	49	Get ROM ID
+
+const SerialDev='/dev/serial0'; // Rpi Internal UART after disabling BT => /boot/config.txt = btoverlay=pi3-disable-bt
+const SerialBaudRate = 1953;
+const SerialParity = "even";
+const SerialBitStop = 1;
+const SerialDataBits = 8;
+
 
 const ECUInit = new Buffer('12000000','hex');
 const ECUGetId = new Buffer('0046489','hex');
