@@ -1,0 +1,18 @@
+{
+  "name": "ParalDa",
+  "version": "0.2.0",
+  "description": "",
+  "main": "bootstrap.js",
+  "dependencies": {
+    "async": "^2.0.1",
+    "basic-auth": "^1.1.0",
+    "compression": "^1.6.2",
+    "express": "^4.14.0",
+    "socket.io": "^1.7.3",
+    "rpio": "^0.9.16",
+    "serialport": "^4.0.7"
+  },
+  "devDependencies": {},
+  "author": "Fred.G",
+  "license": "All Rights Reserved"
+}

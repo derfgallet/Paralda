@@ -1,0 +1,142 @@
+#button {
+    width: 86px;
+    height: 86px;
+    border-bottom: 2px solid #eee;
+
+    background-image: -webkit-linear-gradient(top, #999, #d0d0d0 80% );
+    background-image: -moz-linear-gradient(top, #999, #d0d0d0 80% );
+    background-image: -ms-linear-gradient(top, #999, #d0d0d0 80% );
+    background-image: -o-linear-gradient(top, #999, #d0d0d0 80% );
+    background-image: linear-gradient(top, #999, #d0d0d0 80% );
+
+    -moz-border-radius: 100px;
+    -webkit-border-radius: 100px;
+    border-radius: 100px;
+
+    box-shadow: inset rgba(0,0,0,0.2) 0px 5px 6px ;
+
+    position: relative;
+}
+
+.buttgreen {
+    position: absolute;
+    width: 80px;
+    height: 80px; /*52*/
+    left: 3px;
+    top: 4px;
+    cursor: pointer;
+    font-family: "Lucida Sans";
+    font-weight: bold;
+    font-size: 18px;
+    color: #000;
+    text-shadow: 0px 1px 0px #fff;
+    text-align: center;
+    padding-top: 28px;
+
+    -moz-border-radius: 100px;
+    -webkit-border-radius: 100px;
+    border-radius: 100px;
+
+    background-image: -webkit-linear-gradient(top, #a0eea6, #27bb38 70%, #096306 100% );
+    background-image: -moz-linear-gradient(top, #a0eea6, #27bb38 70%, #096306 100% );
+    background-image: -ms-linear-gradient(top, #a0eea6, #27bb38 70%, #096306 100% );
+    background-image: -o-linear-gradient(top, #a0eea6, #27bb38 70%, #096306 100% );
+    background-image: linear-gradient(top, #a0eea6, #27bb38 70%, #096306 100% );
+
+    background-position: 0 0px;
+    background-color: #eee;
+    background-repeat: no-repeat;
+
+    -webkit-box-shadow: rgba(0,0,0,.4) 0 3px 6px;
+    -moz-box-shadow: rgba(0,0,0,.4) 0 3px 6px;
+    box-shadow: rgba(0,0,0,.4) 0 1px 6px;
+
+    -webkit-transition: all .1s ease-in;
+    -moz-transition: all .1s ease-in;
+    -ms-transition: all .1s ease-in;
+    -o-transition: all .1s ease-in;
+    transition: all .1s ease-in;
+}
+
+.buttgreen:hover {
+    background-position: 0 0px;
+
+    -webkit-box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+    -moz-box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+    box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+}
+
+.buttgreen:active {
+    width: 76px;
+    height: 76px; /*48*/
+    margin: 2px 0 0 2px;
+    border-bottom: 1px solid #fff;
+    font-size: 14px;
+    color: #000;
+
+    -webkit-box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+    -moz-box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+    box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+}
+
+/* Big RED Button */
+.buttred {
+    position: absolute;
+    width: 80px;
+    height: 80px; /*52*/
+    left: 3px;
+    top: 4px;
+    cursor: pointer;
+    font-family: "Lucida Sans";
+    font-weight: bold;
+    font-size: 18px;
+    color: #000;
+    text-shadow: 0px 1px 0px #fff;
+    text-align: center;
+    padding-top: 28px;
+
+    -moz-border-radius: 100px;
+    -webkit-border-radius: 100px;
+    border-radius: 100px;
+
+    background-image: -webkit-linear-gradient(top, #ee5726, #bb4030 70%, #630f0c 100% );
+    background-image: -moz-linear-gradient(top, #ee5726, #bb4030 70%, #630f0c 100% );
+    background-image: -ms-linear-gradient(top, #ee5726, #bb4030 70%, #630f0c 100% );
+    background-image: -o-linear-gradient(top, #ee5726, #bb4030 70%, #630f0c 100% );
+    background-image: linear-gradient(top, #ee5726, #bb4030 70%, #630f0c 100% );
+
+    background-position: 0 0px;
+    background-color: #eee;
+    background-repeat: no-repeat;
+
+    -webkit-box-shadow: rgba(0,0,0,.4) 0 3px 6px;
+    -moz-box-shadow: rgba(0,0,0,.4) 0 3px 6px;
+    box-shadow: rgba(0,0,0,.4) 0 1px 6px;
+
+    -webkit-transition: all .1s ease-in;
+    -moz-transition: all .1s ease-in;
+    -ms-transition: all .1s ease-in;
+    -o-transition: all .1s ease-in;
+    transition: all .1s ease-in;
+}
+
+.buttred:hover {
+    background-position: 0 0px;
+
+    -webkit-box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+    -moz-box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+    box-shadow: rgba(0,0,0,.4) 0 3px 8px;
+}
+
+.buttred:active {
+    width: 76px;
+    height: 76px; /*48*/
+    margin: 2px 0 0 2px;
+    border-bottom: 1px solid #fff;
+    font-size: 14px;
+    color: #000;
+
+    -webkit-box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+    -moz-box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+    box-shadow: inset rgba(0,0,0,.5) 0px 5px 10px;
+}

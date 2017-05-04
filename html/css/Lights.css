@@ -1,0 +1,191 @@
+/* Generic LED Style*/
+.light {
+    display: inline-block;
+ /*   margin: 6em 2em; */
+    position: relative;
+    border-radius: 3.5em;
+    -webkit-box-shadow: 0 0 0.5em rgba(255,255,255,0.2);
+    -moz-box-shadow: 0 0 0.5em rgba(255,255,255,0.2);
+    box-shadow: 0 0 0.5em rgba(255,255,255,0.2);
+}
+
+.light input {
+    display: none;
+}
+
+
+.light span {
+    display: block;
+    -webkit-transition: top 0.2s;
+    -moz-transition: top 0.2s;
+    -ms-transition: top 0.2s;
+    -o-transition: top 0.2s;
+    transition: top 0.2s;
+}
+
+
+.light-led {
+    position: relative;
+   /* left: 2em;*/
+    border-radius: 5em;
+}
+
+.light-text {
+    display: inline-block;
+    position: absolute;
+    top: -7em;
+    color: #dddddd;
+    font-family: arial, verdana, sans-serif;
+    font-size: 10px;
+    text-shadow: 0 0.1em rgba(128,128,128,0.7);
+    text-align: center;
+}
+
+.light-led-border {
+    border: 0.1em solid black;
+    border-radius: 2.1em;
+}
+
+.light-led-light {
+    border-radius: 5.1em;
+    -webkit-box-shadow: 0 0 0.5em rgba(255,255,255,0.5) inset;
+    -moz-box-shadow: 0 0 0.5em rgba(255,255,255,0.5) inset;
+    box-shadow: 0 0 0.5em rgba(255,255,255,0.5) inset;
+}
+
+.light-led-glow {
+    width: 4em;
+    height: 4em;
+    position: relative;
+    border-radius: 2em;
+}
+
+.light-led-glow:before {
+    content: '';
+    display: block;
+    width: 1.2em;
+    height: 1.2em;
+    position: absolute;
+    top: 0.6em;
+    left: 1.4em;
+    background: rgba(255,255,255,0.2);
+    border-radius: .6em;
+    -webkit-box-shadow: 0 0 1em rgba(255,255,255,0.75);
+    -moz-box-shadow: 0 0 1em rgba(255,255,255,0.75);
+    box-shadow: 0 0 1em rgba(255,255,255,0.75);
+}
+
+.light-led-glow:after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0.6em;
+    left: 1.4em;
+    opacity: 0.2;
+    filter: alpha(opacity=20);
+    border: 1em solid #fff;
+    border-color: transparent #fff transparent #fff;
+    border-radius: 1em;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.light-led:after {
+    display: block;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    color: #666;
+    font-family: arial, verdana, sans-serif;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 0.1em rgba(0,0,0,0.7);
+}
+
+/* Greem LED */
+.light-led-green:after {
+    top: -1.8em;
+}
+
+.light-led-green {
+    border-top: 0.1em solid rgba(0,161,75,0.5);
+    border-bottom: 0.1em solid rgba(255,255,255,0.25);
+}
+
+.light-led-green .light-led-light {
+    background: rgb(0,161,75);
+    border: 0.1em solid rgb(0,104,56);
+}
+
+/* Red LED */
+.light-led-red:after {
+    top: -1.8em;
+}
+
+.light-led-red {
+    border-top: 0.1em solid rgba(237,28,36,0.2);
+    border-bottom: 0.1em solid rgba(255,255,255,0.25);
+}
+
+.light-led-red .light-led-light {
+    background: rgb(237,28,36);
+    border: 0.1em solid rgb(161,30,45);
+}
+
+/* Orange LED */
+.light-led-orange:after {
+    top: -1.8em;
+}
+
+.light-led-orange {
+    border-top: 0.1em solid rgba(237, 108, 49, 0.2);
+    border-bottom: 0.1em solid rgba(255,255,255,0.25);
+}
+
+.light-led-orange .light-led-light {
+    background: rgb(237, 130, 34);
+    border: 0.1em solid rgb(161, 87, 55);
+}
+
+/* Switch on */
+
+.light input:checked~.light-led-green {
+    -webkit-box-shadow: 0 0 3em rgb(0,161,75);
+    -moz-box-shadow: 0 0 3em rgb(0,161,75);
+    box-shadow: 0 0 3em rgb(0,161,75);
+}
+
+.light input:checked~.light-led-green .light-led-glow {
+    background: #fff;
+    background: rgba(255, 255, 255, 0.4);
+    filter: alpha(opacity=40);
+}
+
+.light input:checked~.light-led-red {
+    -webkit-box-shadow: 0 0 3em rgb(237,28,36);
+    -moz-box-shadow: 0 0 3em rgb(237,28,36);
+    box-shadow: 0 0 3em rgb(237,28,36);
+}
+
+.light input:checked~.light-led-red .light-led-glow {
+    background: #fff;
+    background: rgba(255, 255, 255, 0.4);
+    filter: alpha(opacity=40);
+}
+
+.light input:checked~.light-led-orange {
+    -webkit-box-shadow: 0 0 3em rgb(237, 130, 34);
+    -moz-box-shadow: 0 0 3em rgb(237, 130, 34);
+    box-shadow: 0 0 3em rgb(237, 130, 34);
+}
+
+.light input:checked~.light-led-orange .light-led-glow {
+    background: #fff;
+    background: rgba(255, 255, 255, 0.4);
+    filter: alpha(opacity=40);
+}

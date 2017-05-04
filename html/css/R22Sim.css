@@ -1,0 +1,23 @@
+body {
+    font-family: arial, verdana, sans-serif;
+    font-size: 8px;
+    background: #1E1E20;
+<!--   text-align: center;-->
+}
+
+.Mytable {
+    border: solid white 1px;
+    border-radius: 10px;
+    width: auto;
+
+    color: #dddddd;
+    font-family: arial, verdana, sans-serif;
+    font-size: 10px;
+    text-shadow: 0 0.1em rgba(128,128,128,0.7);
+    /*text-align: center;*/
+}
+
+.Mytd{
+    font-size: 14px;
+/*    padding:15px;*/
+}
