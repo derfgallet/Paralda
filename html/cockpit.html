@@ -6,7 +6,7 @@
     <title>ParalDa Dashboard</title>
     <link rel="stylesheet" href="css/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="css/flightindicators.css" />
-    <script src="js/jquery/jquery-3.1.1.min.js"></script>
+    <script src="js/jquery/jquery-311.min.js"></script>
     <link rel="stylesheet" href="css/Navigation-Clean1.css">
     <script src="js/jquery.flightindicators.js"></script>
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
@@ -15,22 +15,25 @@
         var socket = io.connect('/');
         socket.on('DATA',
                 function(data){
+                    console.log(data);
                 }
         );
         socket.on('RROTOR',
-                function(data2){
+                function(data){
                     //console.log('Incoming Rotor Rpm message ...');
-
+                    console.log(data);
                 }
         );
         socket.on('MANIFOLD',
                 function (data) {
                     console.log('Incoming Manifold Pressure message ...');
+                    console.log(data);
                 }
         );
         socket.on('LOG',
                 function(data) {
                     document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
+                    console.log(data);
                 }
         );
         function EmergencyHit() {
@@ -59,7 +62,7 @@
         <nav class="navbar navbar-default navbar-fixed-top navigation-clean">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <a class="navbar-brand navbar-link" href="index.html"><img src="/img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
+                    <a class="navbar-brand navbar-link" href="index.html"><img src="./img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
                     <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"></button>
                 </div>
                 <div class="collapse navbar-collapse" id="navcol-1">
@@ -69,7 +72,7 @@
                         <li role="presentation"><a href="params.html">Paramétres </a></li>
                     </ul>
                     <ul class="nav navbar-nav"></ul>
-                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0px;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span> </button>
+                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span> </button>
                 </div>
             </div>
         </nav>
@@ -95,7 +98,7 @@
             <span class="label label-default">Server feedback</span>
         </div>
         <div >
-            <textarea id="ParaldaLog" cols="80" rows="10"></textarea>
+            <textarea id="ParaldaLog" cols="80" rows="10">Log</textarea>
         </div>
     </div>
     <script type="text/javascript">
