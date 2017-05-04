@@ -15,43 +15,9 @@
         var socket = io.connect('/');
         socket.on('DATA',
                 function(data){
+                    console.log(data);
                 }
         );
-        socket.on('RROTOR',
-                function(data2){
-                    //console.log('Incoming Rotor Rpm message ...');
-
-                }
-        );
-        socket.on('MANIFOLD',
-                function (data) {
-                    console.log('Incoming Manifold Pressure message ...');
-                }
-        );
-        socket.on('LOG',
-                function(data) {
-                    document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
-                }
-        );
-        function EmergencyHit() {
-            var CurrentStatus = Emergency.getEmergency();
-
-            if (CurrentStatus==0)
-            {
-                // change status to 1
-                Emergency.setEmergency(1);
-                // send message to stop Engine
-                socket.emit('ENGINE','STOP');
-            }
-            else
-            {
-                // change status to 0
-                Emergency.setEmergency(0);
-                // send message to allow Engine Start
-                socket.emit('ENGINE','READY');
-            }
-
-        }
     </script>
     </head>
     <body style="background-image: url();background-repeat: no-repeat;background-size: auto">
@@ -59,7 +25,7 @@
         <nav class="navbar navbar-default navbar-fixed-top navigation-clean">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <a class="navbar-brand navbar-link" href="index.html"><img src="/img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
+                    <a class="navbar-brand navbar-link" href="index.html"><img src="./img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
                     <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"></button>
                 </div>
                 <div class="collapse navbar-collapse" id="navcol-1">
@@ -75,6 +41,6 @@
         </nav>
     </div>
     <span class="label label-default">Label</span><span class="badge"></span>
-    <img src="/img/Vue-du-ciel-Vietnam.jpg" width="100%" height="100%" style="opacity: 0.2;">
+    <img src="./img/Vue-du-ciel-Vietnam.jpg" width="100%" height="100%" style="opacity: 0.2;">
     </body>
     </html>
