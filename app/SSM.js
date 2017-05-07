@@ -26,7 +26,7 @@ const SerialParity = "even";
 const SerialBitStop = 1;
 const SerialDataBits = 8;
 
-
+ 
 const ECUStop = new Buffer('12000000','hex');
 const ECUReadNULL = new Buffer ('78000000','hex');
 const ECUReadDummy = new Buffer ('78123400','hex');
