@@ -31,6 +31,11 @@ const ECUStop = new Buffer('12000000','hex');
 const ECUReadNULL = new Buffer ('78000000','hex');
 const ECUReadDummy = new Buffer ('78123400','hex');
 const ECUGetId = new Buffer('00464849','hex');
+const ECUReadDataBegin = new Buffer('78','hex');
+const ECUReadDataEnd = new Buffer('00','hex');
+const ECUWriteDataBegin = new Buffer('AA','hex');
+const ECUtest = new Buffer('7F313241423030','hex');
+
 
 var SerialPort = require('serialport');
 
@@ -38,14 +43,14 @@ var Sleep = require('sleep');
 
 var Port = new SerialPort(SerialDev,
     {autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits,
-            parser:SerialPort.parsers.byteLength(3)});
+    parser:SerialPort.parsers.byteLength(3)});
 
 Port.on('error',function(err){console.log('Error : %s',err);});
 
 Port.on('data', function(data){
-            console.log('Received data : ' + data.toString('hex'));Port.write(ECUStop);
+    console.log('Received data : ' + data.toString('hex'));Port.write(ECUStop);
     }
-);
+    );
 
 Port.on('open',function(){console.log('Serial Hooked !');test();});
 
@@ -57,6 +62,6 @@ function test() {        Port.write(ECUStop);
         //Port.write(ECUGetId);
         //Sleep.usleep(10);
         //Port.write(ECUStop);
-        /*      console.log('Done ... praying ...');*/
+/*      console.log('Done ... praying ...');*/
 }
 
