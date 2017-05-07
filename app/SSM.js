@@ -21,14 +21,14 @@ module.exports = {
 // 00	46	48	49	Get ROM ID
 
 const SerialDev='/dev/serial0'; // Rpi Internal UART after disabling BT => /boot/config.txt = btoverlay=pi3-disable-bt
-const SerialBaudRate = 1953;
+const SerialBaudRate = 3000000;
 const SerialParity = "even";
 const SerialBitStop = 1;
 const SerialDataBits = 8;
 
 
-const ECUInit = new Buffer('12000000','hex');
-const ECUGetId = new Buffer('0046489','hex');
+const ECUInit = new Buffer('12','hex');
+const ECUGetId = new Buffer('00464849','hex');
 const ECUReadDataBegin = new Buffer('78','hex');
 const ECUReadDataEnd = new Buffer('00','hex');
 const ECUWriteDataBegin = new Buffer('AA','hex');
@@ -43,7 +43,9 @@ const ECUWriteDataBegin = new Buffer('AA','hex');
 var Serial = require('serialport');
 var Sleep = require('sleep');
 
-var SerialPort = new Serial(SerialDev,{autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits});
+var SerialPort = new Serial(SerialDev,
+    {autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,
+            dataBits:SerialDataBits});
 
 SerialPort.on('error',function(err){console.log('Error : %s',err);});
 
@@ -52,11 +54,11 @@ SerialPort.on('data', function(data){console.log('Received data : ' + data);});
 SerialPort.on('open',function(){console.log('Serial Hooked !');test();});
 
 function test() {
-        Console.log('Sending ECU Init Buffer ...');
+        console.log('Sending ECU Init Buffer ...');
         SerialPort.write(ECUInit);
-        Console.log('Sent. Waiting for a while ...');
+        console.log('Sent. Waiting for a while ...');
         Sleep.usleep(500);
-        Console.log('Sending ECU Get Id Buffer ...');
+        console.log('Sending ECU Get Id Buffer ...');
         SerialPort.write(ECUGetId);
 }
 
