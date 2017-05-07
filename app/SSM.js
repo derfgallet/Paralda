@@ -13,12 +13,10 @@ module.exports = {
 // Commands :
 // 12	00	00	00	Stop
 // 78	msb	lsb	00	Read data from ECU address
-// 45	msb	lsb	00	Read data from TCU address
-// 89	00	lsb		Read data from AirCon address
-// 92	00	lsb		Read data from 4WS address
 // AA	msb	lsb	data	Write data to address
-// AB	00	lsb		Read data from Cruise address
 // 00	46	48	49	Get ROM ID
+//
+// answers format (3 bytes): msb lsb data
 
 const SerialDev='/dev/ttyUSB0';
 const SerialBaudRate = 1953;
@@ -26,7 +24,6 @@ const SerialParity = "even";
 const SerialBitStop = 1;
 const SerialDataBits = 8;
 
- 
 const ECUStop = new Buffer('12000000','hex');
 const ECUReadNULL = new Buffer ('78000000','hex');
 const ECUReadDummy = new Buffer ('78123400','hex');
