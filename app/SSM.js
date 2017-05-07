@@ -20,45 +20,43 @@ module.exports = {
 // AB	00	lsb		Read data from Cruise address
 // 00	46	48	49	Get ROM ID
 
-const SerialDev='/dev/serial0'; // Rpi Internal UART after disabling BT => /boot/config.txt = btoverlay=pi3-disable-bt
-const SerialBaudRate = 3000000;
+const SerialDev='/dev/ttyUSB0';
+const SerialBaudRate = 1953;
 const SerialParity = "even";
 const SerialBitStop = 1;
 const SerialDataBits = 8;
 
 
-const ECUInit = new Buffer('12','hex');
+const ECUStop = new Buffer('12000000','hex');
+const ECUReadNULL = new Buffer ('78000000','hex');
+const ECUReadDummy = new Buffer ('78123400','hex');
 const ECUGetId = new Buffer('00464849','hex');
-const ECUReadDataBegin = new Buffer('78','hex');
-const ECUReadDataEnd = new Buffer('00','hex');
-const ECUWriteDataBegin = new Buffer('AA','hex');
 
-// Former Test
-//const HiECU = new Buffer('8010f001bf40','hex');
-//const MemDumpECU = new Buffer('8010f006a0002000007fc5','hex');
-//const readNull = new Buffer('78000000','hex');
-//const GetId = new Buffer('00387ffe','hex');
+var SerialPort = require('serialport');
 
-
-var Serial = require('serialport');
 var Sleep = require('sleep');
 
-var SerialPort = new Serial(SerialDev,
-    {autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,
-            dataBits:SerialDataBits});
+var Port = new SerialPort(SerialDev,
+    {autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits,
+            parser:SerialPort.parsers.byteLength(3)});
 
-SerialPort.on('error',function(err){console.log('Error : %s',err);});
+Port.on('error',function(err){console.log('Error : %s',err);});
 
-SerialPort.on('data', function(data){console.log('Received data : ' + data);});
+Port.on('data', function(data){
+            console.log('Received data : ' + data.toString('hex'));Port.write(ECUStop);
+    }
+);
 
-SerialPort.on('open',function(){console.log('Serial Hooked !');test();});
+Port.on('open',function(){console.log('Serial Hooked !');test();});
 
-function test() {
-        console.log('Sending ECU Init Buffer ...');
-        SerialPort.write(ECUInit);
-        console.log('Sent. Waiting for a while ...');
-        Sleep.usleep(500);
-        console.log('Sending ECU Get Id Buffer ...');
-        SerialPort.write(ECUGetId);
+function test() {        Port.write(ECUStop);
+        console.log('Sending ECU Init & GetId Buffers ...');
+        Port.write(ECUStop);
+        Port.write(ECUReadNULL);
+        Port.write(ECUStop);
+        //Port.write(ECUGetId);
+        //Sleep.usleep(10);
+        //Port.write(ECUStop);
+        /*      console.log('Done ... praying ...');*/
 }
 
