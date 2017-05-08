@@ -33,7 +33,8 @@
 
         function UpdateDumpLine(addr,value){
             var addrRow=document.getElementById("row"+addr);
-            addrRow.cells[1].innerHTML=value.toString(10);
+            var DecValue=parseInt(value,10);
+            addrRow.cells[1].innerHTML=DecValue;
         }
 
         function DumpIt()
