@@ -111,8 +111,8 @@ Port.on('data', function(data){
         //    data.toString('hex')
         //    ,ReturnedAddress,ReturnedHexValue,ReturnedDecValue,Voltage);
 
-        console.log('%s|%s',ReturnedAddress,ReturnedDecValue);
-        if (ReturnedAddress=="134f") {StopECU();process.exit(0);}
+        //console.log('%s|%s',ReturnedAddress,ReturnedDecValue);
+        //if (ReturnedAddress=="134f") {StopECU();process.exit(0);}
         ProcessQueue();
     }
 });
