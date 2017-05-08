@@ -74,34 +74,108 @@ const SerialDataBits = 8;
 
 const ECUStop = new Buffer('12000000','hex');
 const ECUReadNULL = new Buffer ('78000000','hex');
+const ECUReadBattery = new Buffer('78133500','hex');
 const ECUReadDummy = new Buffer ('78123400','hex');
 const ECUGetId = new Buffer('00464849','hex');
+
+
+var _QueryQueue=[];
+var _ECUBusy=false;
+var _CurrentQuery=null;
+
 
 var SerialPort = require('serialport');
 
 var Sleep = require('sleep');
 
 var Port = new SerialPort(SerialDev,
-    {autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits,
-    parser:SerialPort.parsers.byteLength(3)});
+{autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits});
+
 
 Port.on('error',function(err){console.log('Error : %s',err);});
 
 Port.on('data', function(data){
-    console.log('Received data : ' + data.toString('hex'));
+    if (data.length!=3) return;
+    else {
+        if (data[0]==0x73)
+        {
+            console.log('RomId : %s',data.toString('hex'));
+        }
+        if (!_CurrentQuery) return;
+        var ReturnedHexValue = data.toString('hex').substr(4,2);
+        var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+        var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+        var Voltage = ReturnedDecValue * 0.08;
+
+        //console.log('Raw : %s .Address 0x%s value : 0x%s / %d => Voltage=%d',
+        //    data.toString('hex')
+        //    ,ReturnedAddress,ReturnedHexValue,ReturnedDecValue,Voltage);
+
+        console.log('%s|%s',ReturnedAddress,ReturnedDecValue);
+        if (ReturnedAddress=="134f") {StopECU();process.exit(0);}
+        ProcessQueue();
     }
-    );
+});
 
 Port.on('open',function(){console.log('Serial Hooked !');test();});
 
-function test() {        Port.write(ECUStop);
+function ProcessQueue()
+{
+    var next = _QueryQueue.shift();
+    if (!next){
+        _ECUBusy=false;
+        return;
+    }
+    _CurrentQuery=next;
+    Port.write(new Buffer('78' + next + '00', 'hex'));
+}
+
+function StopECU()
+{
+    Port.write(ECUStop);
+    Port.write(ECUStop);
+}
+
+function QueryECU(address) // hex string
+{
+    if (address.length == 1) address = '000' + address;
+    if (address.length == 2) address = '00' + address;
+    if (address.length == 3) address = '0' + address;
+
+    _QueryQueue.push(address);
+    if (_ECUBusy) return;
+    _ECUBusy=true;
+    ProcessQueue();
+}
+
+function GetIdECU()
+{
+    QueryECU("0000");
+    Port.write(new Buffer('00474849','hex'))
+}
+
+function test() {
         console.log('Sending ECU Init & GetId Buffers ...');
-        Port.write(ECUStop);
-        Port.write(ECUReadNULL);
-        //Port.write(ECUStop);
+        var i=0;
+
+        StopECU();
+        //GetIdECU();
+
+
+        for (i=0x1300;i<0x1350;i++) {
+            QueryECU(i.toString(16));
+        }
+
+/*        Port.write(ECUnew Buffer('12000000','hex')ReadNULL);ReadyForNext=false;
+        while (!ReadyForNext);
+        Port.write(ECUGetId);
+        ReadyForNext=false;
+        while (!ReadyForNext);
+        Port.write(ECUReadBattery);
+    //Port.write(ECUStop);
         //Port.write(ECUGetId);
         //Sleep.usleep(10);
         //Port.write(ECUStop);
-/*      console.log('Done ... praying ...');*/
+      console.log('Done ... praying ...');*///
 }
 
