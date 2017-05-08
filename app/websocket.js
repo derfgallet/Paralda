@@ -8,6 +8,7 @@ var _socket = null;
 var timers=require('timers');
 var GPIO=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
+var SSM=require('./SSM');
 var Platform="";
 
 function start(httpServer) {
@@ -40,9 +41,12 @@ function onConnection(socket) {
     console.log('[ParalDa] New connection (ip = %s, socketId = %s)', socket.request.socket.remoteAddress, socket.id);
     socket.ParaldaLog('Connected to Server from ip = '+socket.request.socket.remoteAddress+', Socket : '+socket.id);
     socket.join('room1');
+    // SSM Init
+    SSM.SSMInit(socket);
     // Client Disconnection
     socket.on('disconnect',function(data){
-       console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s',socket.request.socket.remoteAddress, socket.id,data);
+        console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s',socket.request.socket.remoteAddress, socket.id,data);
+        SSM.SSMClose();
     });
     // Engine Emergency Stop
     socket.on('ENGINE', function(data){
@@ -61,6 +65,7 @@ function onConnection(socket) {
     socket.on('DUMP',
         function(FromAddr,ToAddr){
             socket.ParaldaLog('Dump Asked to Server for addresses 0x'+FromAddr.toString(16)+' to 0x'+ToAddr.toString(16)+'.');
+            SSM.SSMDump(FromAddr,ToAddr)
     })
     
 };

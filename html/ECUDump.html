@@ -22,14 +22,19 @@
 
         socket.on('LOG',
                 function(data) {
-                    document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
+                    var Log=document.getElementById("ParaldaLog");
+                    Log.value = Log.value+data+'\n';
+                    Log.scrollTop = Log.scrollHeight+100;
                 }
         );
-        socket.on('DUMPED',
-                function(addr,value){
-                    document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+addr+'='+value+'\n';
-                }
-        );
+        socket.on('DUMPED', function(addr,val){
+            UpdateDumpLine(addr,val);
+        });
+
+        function UpdateDumpLine(addr,value){
+            var addrRow=document.getElementById("row"+addr);
+            addrRow.cells[1].innerHTML=value.toString(10);
+        }
 
         function DumpIt()
         {

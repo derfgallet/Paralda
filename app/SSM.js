@@ -5,7 +5,6 @@
 
 module.exports = {
     SSMInit: _SSMInit,
-    SSMOpen: _SSMOpen,
     SSMDump: _SSMDump,
     SSMQuery: _SSMQuery,
     SSMClose: _SSMClose
@@ -91,17 +90,25 @@ var _PortOpen=false;
 var _QueryQueue=[];
 var _ECUBusy=false;
 var _CurrentQuery=null;
+var _GetId=false;
+var _CurrentTask="";
 
 function _SSMInit(socket){
-    _Port=new SerialPort(_SerialDev,
-        {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
+    _Port=new _SerialPort(_SerialDev,
+        {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
     _Port.on('error',function(err){console.log('Error : %s',err);});
 
     _Port.on('data', function(data){
         if (data.length!=3) return;
         else {
-            if (!_CurrentQuery){StopECU();return;}
+            if (_GetId) {socket.emit('ROMID',data.toString(16));_GetId=false;}
+            if (!_CurrentQuery){
+                socket.emit('LOG',_CurrentTask+' finihed.');
+                _CurrentTask=""
+                _StopECU();
+                return;
+            }
             var ReturnedHexValue = data.toString('hex').substr(4,2);
             var ReturnedDecValue = parseInt(ReturnedHexValue,16);
             var ReturnedAddress = String(data.toString('hex')).substring(0,4);
@@ -119,18 +126,15 @@ function _SSMInit(socket){
 
 }
 
-function _SSMOpen(){
-    _Port.open();
-}
-
 function _SSMDump(FromAddr,ToAddr) {
     console.log('Sending ECU Init & GetId Buffers ...');
     var i=0;
 
-    StopECU();
+    _CurrentTask="DUMP";
+    _StopECU();
 
     for (var i=FromAddr;i<ToAddr+1;i++) {
-        QueryECU(i.toString(16));
+        _SSMQuery(i.toString(16));
     }
 
 }
@@ -144,25 +148,26 @@ function _SSMQuery(address) // hex string
 }
 
 function _SSMClose(){
-    StopECU();
+    _StopECU();
     _Port.close();
+    _PortOpen=false;
 }
 
 function _ProcessQueue()
 {
     var next = _QueryQueue.shift();
+    _CurrentQuery=next;
     if (!next){
         _ECUBusy=false;
         return;
     }
-    _CurrentQuery=next;
-    Port.write(new Buffer('78' + next + '00', 'hex'));
+    _Port.write(new Buffer('78' + next + '00', 'hex'));
 }
 
 function _StopECU()
 {
-    Port.write(_ECUStop);
-    Port.write(_ECUStop);
+    _Port.write(_ECUStop);
+    _Port.write(_ECUStop);
 }
 
 
@@ -170,7 +175,7 @@ function _StopECU()
 function GetIdECU()
 {
     _SSMQuery("0000");
-    Port.write(_ECUGetId);
+    _Port.write(_ECUGetId);
 }
 
 
