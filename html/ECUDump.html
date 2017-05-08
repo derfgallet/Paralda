@@ -13,11 +13,52 @@
     <script src="js/socket.io.min.js"></script>
     <script>
         var socket = io.connect('/');
+
         socket.on('DATA',
                 function(data){
                     console.log(data);
                 }
         );
+
+        socket.on('LOG',
+                function(data) {
+                    document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
+                }
+        );
+        socket.on('DUMPED',
+                function(addr,value){
+                    document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+addr+'='+value+'\n';
+                }
+        );
+
+        function DumpIt()
+        {
+            var DTable=document.getElementById("DumpTable");
+            var nRow=DTable.rows.length;
+
+            if (nRow>2) // Table need Cleaning
+                for (var delcol=2;delcol<nRow;delcol++)
+                    DTable.deleteRow(2);
+
+            var FromAddress=parseInt(document.getElementById("FromAddr").value,16);
+            var ToAddress=parseInt(document.getElementById("ToAddr").value,16);
+            var CurrAddress = 0;
+            var NewRow=null;
+
+            for (CurrAddress=FromAddress;CurrAddress<=ToAddress;CurrAddress++)
+            {
+                NewRow=DTable.insertRow(DTable.rows.length);
+                NewRow.id="row"+CurrAddress.toString(16);
+                NewRow.insertCell(0).innerHTML='0x'+CurrAddress.toString(16);
+                NewRow.insertCell(1).innerHTML='0';
+                for (var col=2;col<15;col++)
+                {
+                  NewRow.insertCell(col).innerHTML="0";
+                }
+            }
+
+            socket.emit('DUMP',FromAddress,ToAddress);
+        }
     </script>
     </head>
     <body>
@@ -36,10 +77,69 @@
                         <li role="presentation"><a href="params.html">Paramétres </a></li>
                     </ul>
                     <ul class="nav navbar-nav"></ul>
-                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span> </button>
+                    <form class="navbar-form navbar-left" target="_self">
+                        <div class="form-group">
+                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address"/>
+                            <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address"/>
+                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </nav>
+    </div>
+    <div style="position:relative;margin:70px;">
+        <div>
+            <span class="label label-default">Server feedback</span>
+        </div>
+        <div >
+            <textarea id="ParaldaLog" cols="280" rows="5"></textarea>
+        </div>
+    </div>
+    <div class="table-responsive" style="margin:70px;background-color:#FFFFFF;">
+        <div>
+            <span class="label label-default">Dump Area</span>
+        </div>
+        <table class="table table-bordered" style="background-color:#FFFFFF ;" id="DumpTable">
+            <thead>
+            <tr style="background-color: #aaaaaa;color: #ffffff">
+                <th align="center">Address</th>
+                <th align="center">Value N</th>
+                <th align="center">N</th>
+                <th align="center">N*0,08</th>
+                <th align="center">N*2</th>
+                <th align="center">N*25</th>
+                <th align="center">N-50</th>
+                <th align="center">N*5/256</th>
+                <th align="center">N*100/256</th>
+                <th align="center">N*256/1000</th>
+                <th align="center">N*5000/512</th>
+                <th align="center">N*5000/256</th>
+                <th align="center">N-128</th>
+                <th align="center">N*8</th>
+                <th align="center">(N-128)/85</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td align="center">Ignition Advance<Br>Knock Correction<br>Engine Load</td>
+                <td align="center">Battery Voltage</td>
+                <td align="center">Vehicule Speed (Km/h)</td>
+                <td align="center">Engine Speed (Rpm)</td>
+                <td align="center">Coolant Temp (°C)</td>
+                <td align="center">Airflow Sensor (V)<Br>Throttle Position Sensor (V)<Br>Boost Solenoid DC (%DC)</td>
+                <td align="center">Injector Pulse Width (ms)</td>
+                <td align="center">ISU Duty Valve (%DC)</td>
+                <td align="center">O2 Average (mV)</td>
+                <td align="center">O2 Min. (mV)<Br>O2 Max. (mV)</td>
+                <td align="center">A/F Correction (%)</td>
+                <td align="center">Atmospheric Pressure (mmHg)</td>
+                <td align="center">Manifold Relative Pressure (Bar)</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
     </body>
     </html>

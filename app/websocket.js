@@ -23,7 +23,6 @@ function start(httpServer) {
         GPIO.GPIOInit();
         // Enable Engine START
         GPIO.EnableEngine();
-        // TODO : ODB SSM
     }
 
 
@@ -58,6 +57,11 @@ function onConnection(socket) {
             socket.ParaldaLog('Engine Ready.');
         }
     });
+
+    socket.on('DUMP',
+        function(FromAddr,ToAddr){
+            socket.ParaldaLog('Dump Asked to Server for addresses 0x'+FromAddr.toString(16)+' to 0x'+ToAddr.toString(16)+'.');
+    })
     
 };
 

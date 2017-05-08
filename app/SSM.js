@@ -4,7 +4,11 @@
 
 
 module.exports = {
-
+    SSMInit: _SSMInit,
+    SSMOpen: _SSMOpen,
+    SSMDump: _SSMDump,
+    SSMQuery: _SSMQuery,
+    SSMClose: _SSMClose
 };
 
 // Source : http://www.alcyone.org.uk/ssm/protocol.html
@@ -65,61 +69,86 @@ module.exports = {
  BoostSolenoidDutyCycleAddress=1341
 
  */
-const SerialDev='/dev/ttyUSB0';
-//const SerialDev='/dev/ttyS0';
-const SerialBaudRate = 1953;
-const SerialParity = "even";
-const SerialBitStop = 1;
-const SerialDataBits = 8;
 
-const ECUStop = new Buffer('12000000','hex');
-const ECUReadNULL = new Buffer ('78000000','hex');
-const ECUReadBattery = new Buffer('78133500','hex');
-const ECUReadDummy = new Buffer ('78123400','hex');
-const ECUGetId = new Buffer('00464849','hex');
+// Serial Port (FTD1232) Parameters
+const _SerialDev='/dev/ttyUSB0';
+const _SerialBaudRate = 1953;
+const _SerialParity = "even";
+const _SerialBitStop = 1;
+const _SerialDataBits = 8;
+
+// Some Usefull Commands
+const _ECUStop = new Buffer('12000000','hex');
+const _ECUReadNULL = new Buffer ('78000000','hex');
+const _ECUReadDummy = new Buffer ('78123400','hex');
+const _ECUGetId = new Buffer('00464849','hex');
 
 
+var _SerialPort = require('serialport');
+var _Sleep = require('sleep');
+var _Port = null;
+var _PortOpen=false;
 var _QueryQueue=[];
 var _ECUBusy=false;
 var _CurrentQuery=null;
 
+function _SSMInit(socket){
+    _Port=new SerialPort(_SerialDev,
+        {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
-var SerialPort = require('serialport');
+    _Port.on('error',function(err){console.log('Error : %s',err);});
 
-var Sleep = require('sleep');
+    _Port.on('data', function(data){
+        if (data.length!=3) return;
+        else {
+            if (!_CurrentQuery){StopECU();return;}
+            var ReturnedHexValue = data.toString('hex').substr(4,2);
+            var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+            var ReturnedAddress = String(data.toString('hex')).substring(0,4);
 
-var Port = new SerialPort(SerialDev,
-{autoOpen: true, baudRate:SerialBaudRate, parity: SerialParity, stopBits:SerialBitStop,dataBits:SerialDataBits});
+            socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
 
-
-Port.on('error',function(err){console.log('Error : %s',err);});
-
-Port.on('data', function(data){
-    if (data.length!=3) return;
-    else {
-        if (data[0]==0x73)
-        {
-            console.log('RomId : %s',data.toString('hex'));
+            _ProcessQueue();
         }
-        if (!_CurrentQuery) return;
-        var ReturnedHexValue = data.toString('hex').substr(4,2);
-        var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-        var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-        var Voltage = ReturnedDecValue * 0.08;
+    });
 
-        //console.log('Raw : %s .Address 0x%s value : 0x%s / %d => Voltage=%d',
-        //    data.toString('hex')
-        //    ,ReturnedAddress,ReturnedHexValue,ReturnedDecValue,Voltage);
+    _Port.on('open',function(){
+        _PortOpen=true;
+        socket.emit('LOG','Serial Hooked !');
+    });
 
-        //console.log('%s|%s',ReturnedAddress,ReturnedDecValue);
-        //if (ReturnedAddress=="134f") {StopECU();process.exit(0);}
-        ProcessQueue();
+}
+
+function _SSMOpen(){
+    _Port.open();
+}
+
+function _SSMDump(FromAddr,ToAddr) {
+    console.log('Sending ECU Init & GetId Buffers ...');
+    var i=0;
+
+    StopECU();
+
+    for (var i=FromAddr;i<ToAddr+1;i++) {
+        QueryECU(i.toString(16));
     }
-});
 
-Port.on('open',function(){console.log('Serial Hooked !');test();});
+}
 
-function ProcessQueue()
+function _SSMQuery(address) // hex string
+{
+    _QueryQueue.push(address);
+    if (_ECUBusy) return;
+    _ECUBusy=true;
+    _ProcessQueue();
+}
+
+function _SSMClose(){
+    StopECU();
+    _Port.close();
+}
+
+function _ProcessQueue()
 {
     var next = _QueryQueue.shift();
     if (!next){
@@ -130,52 +159,19 @@ function ProcessQueue()
     Port.write(new Buffer('78' + next + '00', 'hex'));
 }
 
-function StopECU()
+function _StopECU()
 {
-    Port.write(ECUStop);
-    Port.write(ECUStop);
+    Port.write(_ECUStop);
+    Port.write(_ECUStop);
 }
 
-function QueryECU(address) // hex string
-{
-    if (address.length == 1) address = '000' + address;
-    if (address.length == 2) address = '00' + address;
-    if (address.length == 3) address = '0' + address;
 
-    _QueryQueue.push(address);
-    if (_ECUBusy) return;
-    _ECUBusy=true;
-    ProcessQueue();
-}
 
 function GetIdECU()
 {
-    QueryECU("0000");
-    Port.write(new Buffer('00474849','hex'))
+    _SSMQuery("0000");
+    Port.write(_ECUGetId);
 }
 
-function test() {
-        console.log('Sending ECU Init & GetId Buffers ...');
-        var i=0;
 
-        StopECU();
-        //GetIdECU();
-
-
-        for (i=0x1300;i<0x1350;i++) {
-            QueryECU(i.toString(16));
-        }
-
-/*        Port.write(ECUnew Buffer('12000000','hex')ReadNULL);ReadyForNext=false;
-        while (!ReadyForNext);
-        Port.write(ECUGetId);
-        ReadyForNext=false;
-        while (!ReadyForNext);
-        Port.write(ECUReadBattery);
-    //Port.write(ECUStop);
-        //Port.write(ECUGetId);
-        //Sleep.usleep(10);
-        //Port.write(ECUStop);
-      console.log('Done ... praying ...');*///
-}
 
