@@ -35,29 +35,19 @@
             var addrRow=document.getElementById("row"+addr);
             var DecValue=parseInt(value,10);
             addrRow.cells[1].innerHTML=DecValue;
-            addrRow.cells[2].innerHTML=DecValue*0.08;
-            addrRow.cells[3].innerHTML=DecValue*2;
-            addrRow.cells[4].innerHTML=DecValue*25;
-            addrRow.cells[5].innerHTML=DecValue-50;
-            addrRow.cells[6].innerHTML=DecValue*5/256;
-            addrRow.cells[7].innerHTML=DecValue*100/256;
-            addrRow.cells[8].innerHTML=DecValue*256/1000;
-            addrRow.cells[9].innerHTML=DecValue*5000/512;
-            addrRow.cells[10].innerHTML=DecValue*5000/256;
-            addrRow.cells[11].innerHTML=DecValue-128;
-            addrRow.cells[12].innerHTML=DecValue*8;
-            addrRow.cells[13].innerHTML=(DecValue-128)/85;
-            /*
-             <th align="center">N-50</th>
-             <th align="center">N*5/256</th>
-             <th align="center">N*100/256</th>
-             <th align="center">N*256/1000</th>
-             <th align="center">N*5000/512</th>
-             <th align="center">N*5000/256</th>
-             <th align="center">N-128</th>
-             <th align="center">N*8</th>
-             <th align="center">(N-128)/85</th>
-             */
+            addrRow.cells[2].innerHTML=DecValue;
+            addrRow.cells[3].innerHTML=DecValue*0.08;
+            addrRow.cells[4].innerHTML=DecValue*2;
+            addrRow.cells[5].innerHTML=DecValue*25;
+            addrRow.cells[6].innerHTML=DecValue-50;
+            addrRow.cells[7].innerHTML=DecValue*5/256;
+            addrRow.cells[8].innerHTML=DecValue*100/256;
+            addrRow.cells[9].innerHTML=DecValue*256/1000;
+            addrRow.cells[10].innerHTML=DecValue*5000/512;
+            addrRow.cells[11].innerHTML=DecValue*5000/256;
+            addrRow.cells[12].innerHTML=DecValue-128;
+            addrRow.cells[13].innerHTML=DecValue*8;
+            addrRow.cells[14].innerHTML=(DecValue-128)/85;
         }
 
         function DumpIt()
