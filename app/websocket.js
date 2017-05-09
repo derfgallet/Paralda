@@ -42,7 +42,7 @@ function onConnection(socket) {
     socket.ParaldaLog('Connected to Server from ip = '+socket.request.socket.remoteAddress+', Socket : '+socket.id);
     socket.join('room1');
     // SSM Init
-    SSM.SSMInit(socket);
+    SSM.SSMInit(socket,true);
     // Client Disconnection
     socket.on('disconnect',function(data){
         console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s',socket.request.socket.remoteAddress, socket.id,data);
