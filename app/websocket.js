@@ -66,9 +66,12 @@ function onConnection(socket) {
         function(FromAddr,ToAddr){
             socket.ParaldaLog('Dump Asked to Server for addresses 0x'+FromAddr.toString(16)+' to 0x'+ToAddr.toString(16)+'.');
             SSM.SSMDump(FromAddr,ToAddr)
-    })
-    
-};
+    });
+
+    socket.on('SAVEADDR',
+        function(address,description){
+
+        });
 
 /**
  * Transmet des donn�es aux sockets connect�s

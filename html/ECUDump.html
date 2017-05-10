@@ -50,6 +50,11 @@
             addrRow.cells[14].innerHTML=Number((DecValue-128)/85).toFixed(2);
         }
 
+        function SaveIt(address){
+            var description = prompt('Description for 0x'+address+' :');
+            socket.emit('SAVEADDR',address,description);
+        }
+
         function DumpIt()
         {
             var DTable=document.getElementById("DumpTable");
@@ -74,6 +79,11 @@
                 {
                   NewRow.insertCell(col).innerHTML="0";
                 }
+                NewRow.insertCell(15).innerHTML="" +
+                        "<button type='button' class='btn btn-default' id='Save" +
+                        CurrAddress.toString(16)+"' onclick='SaveIt("+CurrAddress.toString(16)+");'>" +
+                        "<span class='glyphicon glyphicon-floppy-disk'></span>" +
+                        "</button>";
             }
 
             socket.emit('DUMP',FromAddress,ToAddress);
