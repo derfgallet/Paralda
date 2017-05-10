@@ -36,24 +36,26 @@ function start(httpServer) {
 
 function onConnection(socket) {
 
-    socket.ParaldaLog=function(data) { _socket.emit("LOG",data);}
+    socket.ParaldaLog = function (data) {
+        _socket.emit("LOG", data);
+    }
 
     console.log('[ParalDa] New connection (ip = %s, socketId = %s)', socket.request.socket.remoteAddress, socket.id);
-    socket.ParaldaLog('Connected to Server from ip = '+socket.request.socket.remoteAddress+', Socket : '+socket.id);
+    socket.ParaldaLog('Connected to Server from ip = ' + socket.request.socket.remoteAddress + ', Socket : ' + socket.id);
     socket.join('room1');
     // SSM Init
-    SSM.SSMInit(socket);
+    //SSM.SSMInit(socket, true); // Simulation On
+    SSM.SSMInit(socket, false);
     // Client Disconnection
-    socket.on('disconnect',function(data){
-        console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s',socket.request.socket.remoteAddress, socket.id,data);
+    socket.on('disconnect', function (data) {
+        console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s', socket.request.socket.remoteAddress, socket.id, data);
         SSM.SSMClose();
     });
     // Engine Emergency Stop
-    socket.on('ENGINE', function(data){
-        console.log('Engine Action received %s',data);
-        if (data=='STOP')
-        {
-            if (Platform=="Rpi")GPIO.StopEngine();
+    socket.on('ENGINE', function (data) {
+        console.log('Engine Action received %s', data);
+        if (data == 'STOP') {
+            if (Platform == "Rpi")GPIO.StopEngine();
             socket.ParaldaLog('Engine Stopped.');
         }
         else {
@@ -63,12 +65,16 @@ function onConnection(socket) {
     });
 
     socket.on('DUMP',
-        function(FromAddr,ToAddr){
-            socket.ParaldaLog('Dump Asked to Server for addresses 0x'+FromAddr.toString(16)+' to 0x'+ToAddr.toString(16)+'.');
-            SSM.SSMDump(FromAddr,ToAddr)
-    })
-    
-};
+        function (FromAddr, ToAddr) {
+            socket.ParaldaLog('Dump Asked to Server for addresses 0x' + FromAddr.toString(16) + ' to 0x' + ToAddr.toString(16) + '.');
+            SSM.SSMDump(FromAddr, ToAddr)
+        });
+
+    socket.on('SAVEADDR',
+        function (address, description) {
+
+        });
+}
 
 /**
  * Transmet des donn�es aux sockets connect�s
