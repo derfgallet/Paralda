@@ -12,6 +12,13 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        function ParaldaLog(data)
+        {
+            var Log=document.getElementById("ParaldaLog");
+            Log.value = Log.value+data+'\n';
+            Log.scrollTop = Log.scrollHeight+100;
+        }
+
         var socket = io.connect('/');
 
         socket.on('DATA',
@@ -22,19 +29,27 @@
 
         socket.on('LOG',
                 function(data) {
-                    var Log=document.getElementById("ParaldaLog");
-                    Log.value = Log.value+data+'\n';
-                    Log.scrollTop = Log.scrollHeight+100;
+                    ParaldaLog(data);
                 }
         );
+
         socket.on('DUMPED', function(addr,val){
             UpdateDumpLine(addr,val);
+            ParaldaLog('address: 0x'+addr+' value:'+val+'\n');
         });
+
+        socket.on('ROMID', function(data){ParaldaLog('RomId : '+data);})
+
+
+        function ConnectIt() {
+            SSM.SSMOpen();
+
+        }
 
         function UpdateDumpLine(addr,value){
             var addrRow=document.getElementById("row"+addr);
-            var DecValue=parseInt(value,10);
-            addrRow.cells[1].innerHTML=DecValue;
+            var DecValue=parseInt(value,16);
+            addrRow.cells[1].innerHTML='0x'+value;
             addrRow.cells[2].innerHTML=DecValue;
             addrRow.cells[3].innerHTML=Number(DecValue*0.08).toFixed(2);
             addrRow.cells[4].innerHTML=DecValue*2;
@@ -53,6 +68,11 @@
         function SaveIt(address){
             var description = prompt('Description for 0x'+address+' :');
             socket.emit('SAVEADDR',address,description);
+        }
+
+        function StopIt()
+        {
+            socket.emit('STOPECU');
         }
 
         function DumpIt()
@@ -108,9 +128,11 @@
                     <ul class="nav navbar-nav"></ul>
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
+                            <button class="btn btn-default" type="button" onclick="ConnectIt();">Connect <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
                             <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
                             <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
                             <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>
+                            <button class="btn btn-default" type="button" onclick="StopIt();">Stop Flooding !</button>
                         </div>
                     </form>
                 </div>
@@ -133,7 +155,7 @@
             <thead>
             <tr style="background-color: #aaaaaa;color: #ffffff">
                 <th align="center">Address</th>
-                <th align="center">Value N</th>
+                <th align="center">Hex</th>
                 <th align="center">N</th>
                 <th align="center">N*0,08</th>
                 <th align="center">N*2</th>

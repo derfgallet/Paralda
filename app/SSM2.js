@@ -5,9 +5,12 @@
 
 module.exports = {
     SSMInit: _SSMInit,
+    SSMOpen: _SSMOpen,
     SSMDump: _SSMDump,
+    SSMBurstDump: _SSMBurstDump,
     SSMQuery: _SSMQuery,
-    SSMClose: _SSMClose
+    SSMClose: _SSMClose,
+    StopECU: _StopECU
 };
 
 // Source : http://www.alcyone.org.uk/ssm/protocol.html
@@ -71,7 +74,7 @@ module.exports = {
 
 // Serial Port (FTD1232) Parameters
 const _SerialDev='/dev/ttyUSB0';
-const _SerialBaudRate = 1953;
+const _SerialBaudRate = 1954;
 const _SerialParity = "even";
 const _SerialBitStop = 1;
 const _SerialDataBits = 8;
@@ -95,7 +98,7 @@ var _CurrentTask="";
 
 function _SSMInit(socket){
     _Port=new _SerialPort(_SerialDev,
-        {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
+        {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
     _Port.on('error',function(err){console.log('Error : %s',err);});
 
@@ -139,12 +142,37 @@ function _SSMDump(FromAddr,ToAddr) {
 
 }
 
+function _SSMBurstDump(FromAddr,ToAddr) {
+    console.log('Sending Burst Dumped ...');
+    var i=0;
+    var stringBuffer="";
+
+    _CurrentTask="DUMP";
+    _StopECU();
+
+    for (var i=FromAddr;i<ToAddr+1;i++) {
+        stringBuffer='78'+i.toString(16)+'00';
+        //+'78'+i.toString(16)+'00'+'78'+i.toString(16)+'00';
+        _Port.write(new Buffer(stringBuffer,'hex'));
+        _Sleep.msleep(200);
+        //_Port.drain();
+    }
+}
+
 function _SSMQuery(address) // hex string
 {
     _QueryQueue.push(address);
     if (_ECUBusy) return;
     _ECUBusy=true;
     _ProcessQueue();
+}
+
+function _SSMOpen()
+{
+    _Port.open();
+    _PortOpen=true;
+    _GetId=true;
+    _GetIdECU();
 }
 
 function _SSMClose(){
@@ -172,7 +200,7 @@ function _StopECU()
 
 
 
-function GetIdECU()
+function _GetIdECU()
 {
     _SSMQuery("0000");
     _Port.write(_ECUGetId);

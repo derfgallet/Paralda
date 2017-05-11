@@ -98,9 +98,7 @@ var _CurrentTask="";
 
 function _SSMInit(socket,Simulator){
     _socket=socket;
-    _ECUSimulator=Simulator;
-  //  if(!_ECUSimulator) {
-        console.log('RealLife');
+
         _Port = new _SerialPort(_SerialDev,
             {
                 autoOpen: true,
@@ -115,9 +113,9 @@ function _SSMInit(socket,Simulator){
         });
 
         _Port.on('data', function (data) {
-            console.log(data);
             if (data.length != 3) return;
             else {
+                console.log(data);
                 if (_GetId) {
                     _socket.emit('ROMID', data.toString(16));
                     _GetId = false;
@@ -142,21 +140,14 @@ function _SSMInit(socket,Simulator){
             _PortOpen = true;
             _socket.emit('LOG', 'Serial Hooked !');
         });
-  /*  }
-    else
-    {
-
-    }*/
 }
 
 function _SSMDump(FromAddr,ToAddr) {
-    console.log('Sending ECU Init & GetId Buffers ...');
     var i=0;
 
     _CurrentTask="DUMP";
     _StopECU();
 
-    _Port.write(new Buffer('78000000','hex'));
     for (var i=FromAddr;i<ToAddr+1;i++) {
         _SSMQuery(i.toString(16));
     }
@@ -165,53 +156,39 @@ function _SSMDump(FromAddr,ToAddr) {
 
 function _SSMQuery(address) // hex string
 {
-   // if (!_ECUSimulator) {
-        _QueryQueue.push(address);
-        if (_ECUBusy) return;
-        _ECUBusy = true;
-        _ProcessQueue();
-        console.log('SSMQuery : '+address);
-   /* } else {
-        _socket.emit('DUMPED', address, randomByte());
-    }*/
+    _QueryQueue.push(address);
+    if (_ECUBusy) return;
+    _ECUBusy = true;
+    _ProcessQueue();
 }
 
 function _ProcessQueue()
 {
-    console.log('Begin ProcessQueue');
     var next = _QueryQueue.shift();
-    console.log(next);
     _CurrentQuery=next;
     if (!next){
         _ECUBusy=false;
         return;
     }
-    console.log('send to ECU');
     _Port.write(new Buffer('78' + next + '00', 'hex'));
 }
 
 function _SSMClose(){
     _StopECU();
-    // if (!_ECUSimulator)
     _Port.close();
     _PortOpen=false;
 }
 
 function _StopECU()
 {
-   // if (!_ECUSimulator) {
         _Port.write(_ECUStop);
         _Port.write(_ECUStop);
-  //  }
 }
-
 
 function GetIdECU()
 {
-  //  if (!_ECUSimulator) {
         _SSMQuery("0000");
         _Port.write(_ECUGetId);
-   // }
 }
 
 function randomByte (low, high) {
