@@ -40,10 +40,21 @@
 
         socket.on('ROMID', function(data){ParaldaLog('RomId : '+data);})
 
+        socket.on('ECUCONNECTED',function(){
+            var btn=document.getElementById('ConnectBtn');
+            var badge=document.getElementById('ConnectBadge');
+            btn.innerHTML="Disconnect";
+            btn.onclick=DisconnectIt;
+        });
 
         function ConnectIt() {
-            SSM.SSMOpen();
+            socket.emit('CONNECTECU');
+        }
 
+        function DisconnectIt()
+        {
+                alert('Disconnect');
+            socket.emit('DISCONNECTECU');
         }
 
         function UpdateDumpLine(addr,value){
@@ -128,7 +139,7 @@
                     <ul class="nav navbar-nav"></ul>
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
-                            <button class="btn btn-default" type="button" onclick="ConnectIt();">Connect <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
+                            <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
                             <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
                             <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
                             <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>

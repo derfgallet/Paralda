@@ -51,6 +51,7 @@ function onConnection(socket) {
         console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s', socket.request.socket.remoteAddress, socket.id, data);
         SSM.SSMClose();
     });
+
     // Engine Emergency Stop
     socket.on('ENGINE', function (data) {
         console.log('Engine Action received %s', data);
@@ -75,10 +76,12 @@ function onConnection(socket) {
 
         });
 
-    socket.on('STOPECU',
-    function(){
-       SSM.StopECU();
-    });
+    socket.on('STOPECU', function(){SSM.StopECU();});
+
+    socket.on('CONNECTECU', function (){console.log('Connect ECU received');SSM.SSMOpen();});
+
+    socket.on('DISCONNECTECU',function(){console.log('Disconnect ECU received');SSM.SSMClose();});
+
 }
 
 /**

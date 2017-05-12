@@ -96,6 +96,25 @@ var _CurrentQuery=null;
 var _GetId=false;
 var _CurrentTask="";
 
+function _SSMOpen()
+{
+    _Port.open(function (err) {
+        if (err) {
+            return console.log('Error opening port: ', err.message);
+        }
+        console.log('Entering SerialPort Open Callback');
+        // write errors will be emitted on the port since there is no callback to write
+        _GetId=true;
+    });
+}
+
+function _SSMClose(){
+    _StopECU();
+    _Sleep.msleep(10);
+    _Port.close();
+    _PortOpen=false;
+}
+
 function _SSMInit(socket){
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
@@ -105,9 +124,15 @@ function _SSMInit(socket){
     _Port.on('data', function(data){
         if (data.length!=3) return;
         else {
-            if (_GetId) {socket.emit('ROMID',data.toString(16));_GetId=false;}
+            console.log(data);
+            if (String(data.toString('hex')).substring(0,4)=="0000") return;
+            if (_GetId) {
+                socket.emit('ROMID',data.toString('hex'));
+                socket.emit('ECUCONNECTED');
+                _GetId=false;
+            }
             if (!_CurrentQuery){
-                socket.emit('LOG',_CurrentTask+' finihed.');
+                socket.emit('LOG',_CurrentTask+' finished.');
                 _CurrentTask=""
                 _StopECU();
                 return;
@@ -125,6 +150,8 @@ function _SSMInit(socket){
     _Port.on('open',function(){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
+       if (_GetId)
+            _GetIdECU();
     });
 
 }
@@ -167,20 +194,6 @@ function _SSMQuery(address) // hex string
     _ProcessQueue();
 }
 
-function _SSMOpen()
-{
-    _Port.open();
-    _PortOpen=true;
-    _GetId=true;
-    _GetIdECU();
-}
-
-function _SSMClose(){
-    _StopECU();
-    _Port.close();
-    _PortOpen=false;
-}
-
 function _ProcessQueue()
 {
     var next = _QueryQueue.shift();
@@ -198,11 +211,11 @@ function _StopECU()
     _Port.write(_ECUStop);
 }
 
-
-
 function _GetIdECU()
 {
     _SSMQuery("0000");
+    _Sleep.msleep(1);
+    _CurrentTask='Get ROM Id';
     _Port.write(_ECUGetId);
 }
 
