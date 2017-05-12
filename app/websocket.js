@@ -8,7 +8,7 @@ var _socket = null;
 var timers=require('timers');
 var GPIO=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
-var SSM=require('./SSM');
+var SSM=require('./SSM2');
 var Platform="";
 
 function start(httpServer) {
@@ -51,6 +51,7 @@ function onConnection(socket) {
         console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s', socket.request.socket.remoteAddress, socket.id, data);
         SSM.SSMClose();
     });
+
     // Engine Emergency Stop
     socket.on('ENGINE', function (data) {
         console.log('Engine Action received %s', data);
@@ -74,6 +75,13 @@ function onConnection(socket) {
         function (address, description) {
 
         });
+
+    socket.on('STOPECU', function(){SSM.StopECU();});
+
+    socket.on('CONNECTECU', function (){console.log('Connect ECU received');SSM.SSMOpen();});
+
+    socket.on('DISCONNECTECU',function(){console.log('Disconnect ECU received');SSM.SSMClose();});
+
 }
 
 /**

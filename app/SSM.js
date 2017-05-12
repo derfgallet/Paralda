@@ -5,12 +5,9 @@
 
 module.exports = {
     SSMInit: _SSMInit,
-    SSMOpen: _SSMOpen,
     SSMDump: _SSMDump,
-    SSMBurstDump: _SSMBurstDump,
     SSMQuery: _SSMQuery,
-    SSMClose: _SSMClose,
-    StopECU: _StopECU
+    SSMClose: _SSMClose
 };
 
 // Source : http://www.alcyone.org.uk/ssm/protocol.html
@@ -72,9 +69,12 @@ module.exports = {
 
  */
 
+var _ECUSimulator=true;
+var _socket=null;
+
 // Serial Port (FTD1232) Parameters
 const _SerialDev='/dev/ttyUSB0';
-const _SerialBaudRate = 1954;
+const _SerialBaudRate = 1953;
 const _SerialParity = "even";
 const _SerialBitStop = 1;
 const _SerialDataBits = 8;
@@ -96,64 +96,57 @@ var _CurrentQuery=null;
 var _GetId=false;
 var _CurrentTask="";
 
-function _SSMOpen()
-{
-    _Port.open(function (err) {
-        if (err) {
-            return console.log('Error opening port: ', err.message);
-        }
-        console.log('Entering SerialPort Open Callback');
-        // write errors will be emitted on the port since there is no callback to write
-        _GetId=true;
-    });
-}
+function _SSMInit(socket,Simulator){
+    _socket=socket;
+    _ECUSimulator=Simulator;
+  //  if(!_ECUSimulator) {
+        console.log('RealLife');
+        _Port = new _SerialPort(_SerialDev,
+            {
+                autoOpen: true,
+                baudRate: _SerialBaudRate,
+                parity: _SerialParity,
+                stopBits: _SerialBitStop,
+                dataBits: _SerialDataBits
+            });
 
-function _SSMClose(){
-    _StopECU();
-    _Sleep.msleep(10);
-    _Port.close();
-    _PortOpen=false;
-}
+        _Port.on('error', function (err) {
+            console.log('Error : %s', err);
+        });
 
-function _SSMInit(socket){
-    _Port=new _SerialPort(_SerialDev,
-        {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
-
-    _Port.on('error',function(err){console.log('Error : %s',err);});
-
-    _Port.on('data', function(data){
-        if (data.length!=3) return;
-        else {
+        _Port.on('data', function (data) {
             console.log(data);
-            if (String(data.toString('hex')).substring(0,4)=="0000") return;
-            if (_GetId) {
-                socket.emit('ROMID',data.toString('hex'));
-                socket.emit('ECUCONNECTED');
-                _GetId=false;
+            if (data.length != 3) return;
+            else {
+                if (_GetId) {
+                    _socket.emit('ROMID', data.toString(16));
+                    _GetId = false;
+                }
+                if (!_CurrentQuery) {
+                    _socket.emit('LOG', _CurrentTask + ' finihed.');
+                    _CurrentTask = ""
+                    _StopECU();
+                    return;
+                }
+                var ReturnedHexValue = data.toString('hex').substr(4, 2);
+                var ReturnedDecValue = parseInt(ReturnedHexValue, 16);
+                var ReturnedAddress = String(data.toString('hex')).substring(0, 4);
+
+                _socket.emit('DUMPED', ReturnedAddress, ReturnedHexValue);
+
+                _ProcessQueue();
             }
-            if (!_CurrentQuery){
-                socket.emit('LOG',_CurrentTask+' finished.');
-                _CurrentTask=""
-                _StopECU();
-                return;
-            }
-            var ReturnedHexValue = data.toString('hex').substr(4,2);
-            var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-            var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+        });
 
-            socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+        _Port.on('open', function () {
+            _PortOpen = true;
+            _socket.emit('LOG', 'Serial Hooked !');
+        });
+  /*  }
+    else
+    {
 
-            _ProcessQueue();
-        }
-    });
-
-    _Port.on('open',function(){
-        _PortOpen=true;
-        socket.emit('LOG','Serial Hooked !');
-       if (_GetId)
-            _GetIdECU();
-    });
-
+    }*/
 }
 
 function _SSMDump(FromAddr,ToAddr) {
@@ -163,61 +156,66 @@ function _SSMDump(FromAddr,ToAddr) {
     _CurrentTask="DUMP";
     _StopECU();
 
+    _Port.write(new Buffer('78000000','hex'));
     for (var i=FromAddr;i<ToAddr+1;i++) {
         _SSMQuery(i.toString(16));
     }
 
 }
 
-function _SSMBurstDump(FromAddr,ToAddr) {
-    console.log('Sending Burst Dumped ...');
-    var i=0;
-    var stringBuffer="";
-
-    _CurrentTask="DUMP";
-    _StopECU();
-
-    for (var i=FromAddr;i<ToAddr+1;i++) {
-        stringBuffer='78'+i.toString(16)+'00';
-        //+'78'+i.toString(16)+'00'+'78'+i.toString(16)+'00';
-        _Port.write(new Buffer(stringBuffer,'hex'));
-        _Sleep.msleep(200);
-        //_Port.drain();
-    }
-}
-
 function _SSMQuery(address) // hex string
 {
-    _QueryQueue.push(address);
-    if (_ECUBusy) return;
-    _ECUBusy=true;
-    _ProcessQueue();
+   // if (!_ECUSimulator) {
+        _QueryQueue.push(address);
+        if (_ECUBusy) return;
+        _ECUBusy = true;
+        _ProcessQueue();
+        console.log('SSMQuery : '+address);
+   /* } else {
+        _socket.emit('DUMPED', address, randomByte());
+    }*/
 }
 
 function _ProcessQueue()
 {
+    console.log('Begin ProcessQueue');
     var next = _QueryQueue.shift();
+    console.log(next);
     _CurrentQuery=next;
     if (!next){
         _ECUBusy=false;
         return;
     }
+    console.log('send to ECU');
     _Port.write(new Buffer('78' + next + '00', 'hex'));
+}
+
+function _SSMClose(){
+    _StopECU();
+    // if (!_ECUSimulator)
+    _Port.close();
+    _PortOpen=false;
 }
 
 function _StopECU()
 {
-    _Port.write(_ECUStop);
-    _Port.write(_ECUStop);
+   // if (!_ECUSimulator) {
+        _Port.write(_ECUStop);
+        _Port.write(_ECUStop);
+  //  }
 }
 
-function _GetIdECU()
+
+function GetIdECU()
 {
-    _SSMQuery("0000");
-    _Sleep.msleep(1);
-    _CurrentTask='Get ROM Id';
-    _Port.write(_ECUGetId);
+  //  if (!_ECUSimulator) {
+        _SSMQuery("0000");
+        _Port.write(_ECUGetId);
+   // }
 }
 
+function randomByte (low, high) {
+    return Math.floor(Math.random() * 256);
+}
 
 
