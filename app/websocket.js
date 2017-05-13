@@ -8,7 +8,7 @@ var _socket = null;
 var timers=require('timers');
 var GPIO=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
-var SSM=require('./SSM2');
+var SSM=require('./SSM3');
 var Platform="";
 
 function start(httpServer) {

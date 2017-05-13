@@ -114,36 +114,44 @@ function _SSMInit(socket){
 
     _Port.on('error',function(err){console.log('Error : %s',err);});
 
-    _Port.on('data', function(data){
-        if (data.length!=3) return;
-        else {
-            console.log(data);
-            if (String(data.toString('hex')).substring(0,4)=="0000") return;
-            if (_GetId) {
-                socket.emit('ROMID',data.toString('hex'));
-                socket.emit('ECUCONNECTED');
-                _GetId=false;
-            }
-            if (!_CurrentQuery){
-                socket.emit('LOG',_CurrentTask+' finished.');
-                _CurrentTask=""
-                _StopECU();
+    _Port.on('data', function(data) {
+
+        switch (data.length) {
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                console.log(data);
+                if (String(data.toString('hex')).substring(0,4)=="0000") return;
+                if (_GetId) {
+                    socket.emit('ROMID',data.toString('hex'));
+                    socket.emit('ECUCONNECTED');
+                    _GetId=false;
+                }
+                if (!_CurrentQuery){
+                    socket.emit('LOG',_CurrentTask+' finished.');
+                    _CurrentTask=""
+                    _StopECU();
+                    return;
+                }
+                var ReturnedHexValue = data.toString('hex').substr(4,2);
+                var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+                var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+
+                socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+
+                _ProcessQueue();
+                break;
+            default:
                 return;
-            }
-            var ReturnedHexValue = data.toString('hex').substr(4,2);
-            var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-            var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-
-            socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
-
-            _ProcessQueue();
         }
     });
 
     _Port.on('open',function(){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
-       if (_GetId)
+        if (_GetId)
             _GetIdECU();
     });
 
