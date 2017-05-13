@@ -98,14 +98,7 @@ var _CurrentTask="";
 
 function _SSMOpen()
 {
-    _Port.open(function (err) {
-        if (err) {
-            return console.log('Error opening port: ', err.message);
-        }
-        console.log('Entering SerialPort Open Callback');
-        // write errors will be emitted on the port since there is no callback to write
-        _GetId=true;
-    });
+    _Port.open();
 }
 
 function _SSMClose(){
@@ -214,7 +207,7 @@ function _StopECU()
 function _GetIdECU()
 {
     _SSMQuery("0000");
-    _Sleep.msleep(1);
+    _Sleep.msleep(5);
     _CurrentTask='Get ROM Id';
     _Port.write(_ECUGetId);
 }

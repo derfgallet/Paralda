@@ -122,28 +122,38 @@ function _SSMInit(socket){
     _Port.on('error',function(err){console.log('Error : %s',err);});
 
     _Port.on('data', function(data){
-        if (data.length!=3) return;
-        else {
-            console.log(data);
-            if (String(data.toString('hex')).substring(0,4)=="0000") return;
-            if (_GetId) {
-                socket.emit('ROMID',data.toString('hex'));
-                socket.emit('ECUCONNECTED');
-                _GetId=false;
-            }
-            if (!_CurrentQuery){
-                socket.emit('LOG',_CurrentTask+' finished.');
-                _CurrentTask=""
-                _StopECU();
-                return;
-            }
-            var ReturnedHexValue = data.toString('hex').substr(4,2);
-            var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-            var ReturnedAddress = String(data.toString('hex')).substring(0,4);
 
-            socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+        switch(data.length) {
+            case 1:
+                break;
+            case 2:
+                break;
+            case 3:
+                console.time('RECV');
+                console.log(data);
+                if (String(data.toString('hex')).substring(0,4)=="0000") return;
+                if (_GetId) {
+                    socket.emit('ROMID',data.toString('hex'));
+                    socket.emit('ECUCONNECTED');
+                    _GetId=false;
+                }
+                if (!_CurrentQuery){
+                    socket.emit('LOG',_CurrentTask+' finished.');
+                    _CurrentTask=""
+                    _StopECU();
+                    return;
+                }
+                var ReturnedHexValue = data.toString('hex').substr(4,2);
+                var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+                var ReturnedAddress = String(data.toString('hex')).substring(0,4);
 
-            _ProcessQueue();
+                socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+
+                _ProcessQueue();
+                console.timeEnd('RECV');
+                break;
+            default:
+                break;
         }
     });
 
