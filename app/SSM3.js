@@ -134,8 +134,8 @@ function _SSMInit(socket){
                 var ReturnedHexValue = data.toString('hex').substr(4,2);
                 var ReturnedDecValue = parseInt(ReturnedHexValue,16);
                 var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-
-                //socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                
+                socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
 
                 console.timeEnd('RECV');
                 console.time('ProcessQueue');
