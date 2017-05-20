@@ -123,25 +123,24 @@ function _SSMInit(socket){
                 break;
             case 3:
                 console.log(data);
-                if (String(data.toString('hex')).substring(0,4)=="0000") return;
-                if (_GetId) {
-                    socket.emit('ROMID',data.toString('hex'));
-                    socket.emit('ECUCONNECTED');
-                    _GetId=false;
-                }
+                console.time('RECV');
                 if (!_CurrentQuery){
                     socket.emit('LOG',_CurrentTask+' finished.');
                     _CurrentTask=""
                     _StopECU();
                     return;
                 }
+
                 var ReturnedHexValue = data.toString('hex').substr(4,2);
                 var ReturnedDecValue = parseInt(ReturnedHexValue,16);
                 var ReturnedAddress = String(data.toString('hex')).substring(0,4);
 
-                socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                //socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
 
+                console.timeEnd('RECV');
+                console.time('ProcessQueue');
                 _ProcessQueue();
+                console.timeEnd('ProcessQueue');
                 break;
             default:
                 return;
