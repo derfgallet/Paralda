@@ -122,7 +122,7 @@ function _SSMInit(socket){
             case 2:
                 break;
             case 3:
-                if (!_CurrentQuery){
+                if (!_QueryQueue.length){
                     socket.emit('LOG',_CurrentTask+' finished.');
                     _CurrentTask=""
                     _StopECU();
@@ -130,9 +130,7 @@ function _SSMInit(socket){
                     return;
                 }
                 _ReceivedBuffer.push(data);
-                console.time('ProcessQueue');
                 _ProcessQueue();
-                console.timeEnd('ProcessQueue');
                 break;
             default:
                 return;
@@ -180,14 +178,15 @@ function _SSMQuery(address) // hex string
 
 function _ProcessQueue()
 {
-    var next = _QueryQueue.shift();
-    _CurrentQuery=next;
-    if (!next){
+    if (!_QueryQueue.length)
+    {
         _ECUBusy=false;
         console.log('Queue finished.');
-        return;
     }
-    _Port.write(new Buffer('78' + next + '00', 'hex'));
+    else
+    {   _CurrentQuery = _QueryQueue.shift();
+        _Port.write(new Buffer('78' + _CurrentQuery + '02', 'hex'));
+    }
 }
 
 function _StopECU()
