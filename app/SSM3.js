@@ -7,7 +7,6 @@ module.exports = {
     SSMInit: _SSMInit,
     SSMOpen: _SSMOpen,
     SSMDump: _SSMDump,
-    SSMBurstDump: _SSMBurstDump,
     SSMQuery: _SSMQuery,
     SSMClose: _SSMClose,
     StopECU: _StopECU
@@ -95,6 +94,7 @@ var _ECUBusy=false;
 var _CurrentQuery=null;
 var _GetId=false;
 var _CurrentTask="";
+var _ReceivedBuffer=[];
 
 function _SSMOpen()
 {
@@ -110,7 +110,7 @@ function _SSMClose(){
 
 function _SSMInit(socket){
     _Port=new _SerialPort(_SerialDev,
-        {autoOpen: false, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
+        {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
     _Port.on('error',function(err){console.log('Error : %s',err);});
 
@@ -122,22 +122,14 @@ function _SSMInit(socket){
             case 2:
                 break;
             case 3:
-                console.log(data);
-                console.time('RECV');
                 if (!_CurrentQuery){
                     socket.emit('LOG',_CurrentTask+' finished.');
                     _CurrentTask=""
                     _StopECU();
+                    SendReceivedBuffer(_ReceivedBuffer,socket);
                     return;
                 }
-
-                var ReturnedHexValue = data.toString('hex').substr(4,2);
-                var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-                var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-                
-                socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
-
-                console.timeEnd('RECV');
+                _ReceivedBuffer.push(data);
                 console.time('ProcessQueue');
                 _ProcessQueue();
                 console.timeEnd('ProcessQueue');
@@ -150,12 +142,21 @@ function _SSMInit(socket){
     _Port.on('open',function(){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
-        if (_GetId)
-            _GetIdECU();
     });
 
 }
 
+function SendReceivedBuffer(buf,socket)
+{
+    for (var i=0; i<buf.length;i++)
+    {
+        var ReturnedHexValue = buf[i].toString('hex').substr(4,2);
+        //var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+        var ReturnedAddress = String(buf[i].toString('hex')).substring(0,4);
+
+        socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+    }
+}
 function _SSMDump(FromAddr,ToAddr) {
     console.log('Sending ECU Init & GetId Buffers ...');
     var i=0;
@@ -167,23 +168,6 @@ function _SSMDump(FromAddr,ToAddr) {
         _SSMQuery(i.toString(16));
     }
 
-}
-
-function _SSMBurstDump(FromAddr,ToAddr) {
-    console.log('Sending Burst Dumped ...');
-    var i=0;
-    var stringBuffer="";
-
-    _CurrentTask="DUMP";
-    _StopECU();
-
-    for (var i=FromAddr;i<ToAddr+1;i++) {
-        stringBuffer='78'+i.toString(16)+'00';
-        //+'78'+i.toString(16)+'00'+'78'+i.toString(16)+'00';
-        _Port.write(new Buffer(stringBuffer,'hex'));
-        _Sleep.msleep(200);
-        //_Port.drain();
-    }
 }
 
 function _SSMQuery(address) // hex string
@@ -200,6 +184,7 @@ function _ProcessQueue()
     _CurrentQuery=next;
     if (!next){
         _ECUBusy=false;
+        console.log('Queue finished.');
         return;
     }
     _Port.write(new Buffer('78' + next + '00', 'hex'));
