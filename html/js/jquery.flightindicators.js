@@ -72,9 +72,19 @@
 					$(this).html('<div class="instrument manifold"><img src="' + settings.img_directory + 'fi_box.svg" class="background box" alt="" /><img src="' + settings.img_directory + 'manifold_mechanics.svg" class="box" alt="" /><div class="speed box"><img src="' + settings.img_directory + 'fi_needle.svg" class="box" alt="" /></div><div class="mechanics box"><img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" /></div></div>');
 					_setAirSpeed(settings.airspeed);
 				break
-				case 'Engine_RPM':
-					$(this).html('<div class="instrument manifold"><img src="' + settings.img_directory + 'fi_box.svg" class="background box" alt="" /><img src="' + settings.img_directory + 'Engine_RPM.svg" class="box" alt="" /><div class="speed box"><img src="' + settings.img_directory + 'fi_needle.svg" class="box" alt="" /></div><div class="mechanics box"><img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" /></div></div>');
-					//_setAirSpeed(settings.airspeed);
+                case 'Engine_RPM':
+					$(this).html('' +
+                        '<div class="instrument Engine_RPM">' +
+                        '   <img src="' + settings.img_directory + 'fi_box.svg" class="background box" alt="" />' +
+                        '   <img src="' + settings.img_directory + 'Engine_RPM.svg" class="box" alt="" />' +
+                        '   <div class="RPMNeedle box">' +
+                        '       <img id="RPMNeedle" src="' + settings.img_directory + 'fi_needle.svg" class="box" alt="" />' +
+                        '   </div>' +
+                    //    '   <div class="mechanics box">' +
+                    //    '       <img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" />' +
+                    //    '   </div>' +
+                        '</div>');
+                    _setEngineRPM(5950);
 					break
 				case 'RPM':
 					$(this).html('' +
@@ -219,6 +229,22 @@
 			});	
 		}
 
+        function _setEngineRPM(RPM){
+            // 90 deg => 4000 rpm
+            // 53 deg => 3000 rpm
+            // 16 deg => 2000 rpm
+            // -21 deg => 1000 rpm
+            // -58 deg => virtual 0 rpm
+
+
+
+            var needle=RPM/1000*37-58;
+
+            placeholder.each(function(){
+                $(this).find('div.instrument.Engine_RPM div.RPMNeedle').css('transform', 'rotate(' + needle + 'deg)');
+            });
+        }
+
 		function _setERpm(RPM){
 			// 225 deg is lower bound
 			// 135 deg is upper bound
@@ -288,6 +314,7 @@
 		this.setPressure = function(pressure){_setPressure(pressure);}
 		this.setERpm = function(RPM){_setERpm(RPM);}
 		this.setRRpm = function(RPM){_setRRpm(RPM);}
+		this.setEngineRPM = function(RPM){_setEngineRPM(RPM)};
 		this.resize = function(size){_resize(size);}
 		this.setEmergency = function(status){_setEmergency(status);}
 		this.getEmergency = function(){return _getEmergency();}
