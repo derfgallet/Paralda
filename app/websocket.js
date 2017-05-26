@@ -7,6 +7,9 @@ module.exports = {
 var _socket = null;
 var timers=require('timers');
 var GPIO=null;
+var MPU6050=null;
+var Gyro=null;
+var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
 var SSM=require('./SSM3');
 var Platform="Rpi";
@@ -19,11 +22,38 @@ function start(httpServer) {
 
     if (Platform=="Rpi")
     {
-        GPIO = require('./GPIO');
         // GPIO Driver
+        GPIO = require('./GPIO');
         GPIO.GPIOInit();
         // Enable Engine START
         GPIO.EnableEngine();
+
+        /*
+         GYRO TEST Code
+
+         var i2c = require('i2c-bus');
+         var MPU6050 = require('./MPU6050');
+
+         var address = 0x68;
+         var i2c1 = i2c.openSync(1);
+
+         var sensor = new MPU6050(i2c1, address);
+
+         var data = sensor.readSync();
+         console.log(data);
+
+         */
+
+        // MPU6050 Driver
+        i2c = require('i2c-bus');
+        var address = 0x68;
+        var i2c1 = i2c.openSync(1);
+        MPU6050 = require('./MPU6050');
+        Gyro  = new MPU6050(i2c1, address);
+
+        // var data = sensor.readSync();
+
+        // TODO : SetInterval BroadCast Data to Room 1 Sockets
     }
 
 
