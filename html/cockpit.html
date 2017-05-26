@@ -15,7 +15,10 @@
         var socket = io.connect('/');
         socket.on('DATA',
                 function(data){
-                    console.log(data);
+                    //var RcvDta = JSON.parse(data);
+                    //console.log(data.rotation);
+                    attitude.setRoll(data.rotation.x);
+                    attitude.setPitch(-data.rotation.y);
                 }
         );
         socket.on('RROTOR',
@@ -105,10 +108,10 @@
     <script type="text/javascript">
         // Dynamic examples
         var attitude = $.flightIndicator('#attitude', 'attitude', {roll:50, pitch:-20, size:200, showBox : false});
-        var heading = $.flightIndicator('#heading', 'heading', {heading:150, showBox:false});
-        var variometer = $.flightIndicator('#variometer', 'variometer', {vario:-5, showBox:false});
-        var airspeed = $.flightIndicator('#airspeed', 'airspeed', {showBox: false});
-        var altimeter = $.flightIndicator('#altimeter', 'altimeter', {showBox: false});
+        //var heading = $.flightIndicator('#heading', 'heading', {heading:150, showBox:false});
+        //var variometer = $.flightIndicator('#variometer', 'variometer', {vario:-5, showBox:false});
+        //var airspeed = $.flightIndicator('#airspeed', 'airspeed', {showBox: false});
+        //var altimeter = $.flightIndicator('#altimeter', 'altimeter', {showBox: false});
         var manifold = $.flightIndicator('#manifold', 'manifold', {showBox: false});
         var RPM = $.flightIndicator('#RPM', 'RPM', {showBox: false});
         var Emergency = $.flightIndicator('#Emergency', 'Emergency', {showBox: true});

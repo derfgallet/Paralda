@@ -112,7 +112,7 @@ function _SSMInit(socket){
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
-    _Port.on('error',function(err){console.log('Error : %s',err);});
+    _Port.on('error',function(err){console.log(err);});
 
     _Port.on('data', function(data) {
 

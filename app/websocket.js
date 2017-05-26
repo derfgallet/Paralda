@@ -52,17 +52,22 @@ function start(httpServer) {
         Gyro  = new MPU6050(i2c1, address);
 
         // var data = sensor.readSync();
-
-        // TODO : SetInterval BroadCast Data to Room 1 Sockets
+        console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
+        timers.setInterval(BroadCastData,broadcastDelay);
     }
 
 
     console.log('\tStarted');
-    console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
-    //timers.setInterval(
-    //    ReadADC,broadcastDelay);
+
     
 };
+
+function BroadCastData()
+{
+    var data = Gyro.readSync();
+
+    broadcast('room1','DATA',data);
+}
 
 function onConnection(socket) {
 
