@@ -126,9 +126,13 @@ function _SSMInit(socket){
                     socket.emit('LOG',_CurrentTask+' finished.');
                     _CurrentTask=""
                     _StopECU();
-                    SendReceivedBuffer(_ReceivedBuffer,socket);
+                    //SendReceivedBuffer(_ReceivedBuffer,socket);
                     return;
                 }
+                var ReturnedHexValue = data.toString('hex').substr(4,2);
+                var ReturnedDecValue = parseInt(ReturnedHexValue,16);
+                var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+                socket.emit('DUMPED',ReturnedAddress,ReturnedDecValue);
                 _ReceivedBuffer.push(data);
                 _ProcessQueue();
                 break;
@@ -148,9 +152,7 @@ function SendReceivedBuffer(buf,socket)
 {
     for (var i=0; i<buf.length;i++)
     {
-        var ReturnedHexValue = buf[i].toString('hex').substr(4,2);
-        //var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-        var ReturnedAddress = String(buf[i].toString('hex')).substring(0,4);
+
 
         socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
     }
@@ -171,23 +173,29 @@ function _SSMDump(FromAddr,ToAddr) {
 function _SSMQuery(address) // hex string
 {
     _QueryQueue.push(address);
-    if (_ECUBusy) return;
+    if (_ECUBusy || !_PortOpen) return;
     _ECUBusy=true;
     _ProcessQueue();
 }
 
 function _ProcessQueue()
 {
-    var next=_CurrentQuery = _QueryQueue.shift();
+    console.log('ProcessQueue _PortOpen:'+_PortOpen);
+    if (_PortOpen)
+        {
+        var next=_CurrentQuery = _QueryQueue.shift();
 
-    if (!next)
-    {
-        _ECUBusy=false;
-        console.log('Queue finished.');
-    }
-    else
-    {
-        _Port.write(new Buffer('78' + next + '02', 'hex'));
+        if (!next)
+        {
+            _ECUBusy=false;
+            console.log('Queue finished.');
+        }
+        else
+        {
+
+               console.log('Writing to Port : '+next);
+               _Port.write(new Buffer('78' + next + '02', 'hex'));
+        }
     }
 }
 

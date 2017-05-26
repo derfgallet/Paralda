@@ -19,13 +19,17 @@
                     //console.log(data.rotation);
                     attitude.setRoll(data.rotation.x);
                     attitude.setPitch(-data.rotation.y);
-                    Engine_RPM.setEngineRPM(data.Engine.RPM);
+                    //Engine_RPM.setEngineRPM(data.Engine.RPM);
                 }
         );
 
         socket.on('DUMPED',
         function(address,value){
-            if (address==1338) Engine_RPM.setEngineRPM(value);
+            if (address==1338)
+            {
+                Engine_RPM.setEngineRPM(value*50);
+                console.log('Dumped : '+value*50);
+            }
         });
 
         socket.on('RROTOR',
