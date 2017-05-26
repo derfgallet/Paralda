@@ -19,8 +19,15 @@
                     //console.log(data.rotation);
                     attitude.setRoll(data.rotation.x);
                     attitude.setPitch(-data.rotation.y);
+                    Engine_RPM.setEngineRPM(data.Engine.RPM);
                 }
         );
+
+        socket.on('DUMPED',
+        function(address,value){
+            if (address==1338) Engine_RPM.setEngineRPM(value);
+        });
+
         socket.on('RROTOR',
                 function(data){
                     //console.log('Incoming Rotor Rpm message ...');
