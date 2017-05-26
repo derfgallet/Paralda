@@ -146,7 +146,7 @@ function _SSMInit(socket){
 
 function SendReceivedBuffer(buf,socket)
 {
-    for (var i=0; i<buf.length;i++)
+    for (var i=0; i<buf.length+1;i++)
     {
         var ReturnedHexValue = buf[i].toString('hex').substr(4,2);
         //var ReturnedDecValue = parseInt(ReturnedHexValue,16);
