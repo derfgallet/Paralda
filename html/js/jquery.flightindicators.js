@@ -72,6 +72,10 @@
 					$(this).html('<div class="instrument manifold"><img src="' + settings.img_directory + 'fi_box.svg" class="background box" alt="" /><img src="' + settings.img_directory + 'manifold_mechanics.svg" class="box" alt="" /><div class="speed box"><img src="' + settings.img_directory + 'fi_needle.svg" class="box" alt="" /></div><div class="mechanics box"><img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" /></div></div>');
 					_setAirSpeed(settings.airspeed);
 				break
+				case 'Engine_RPM':
+					$(this).html('<div class="instrument manifold"><img src="' + settings.img_directory + 'fi_box.svg" class="background box" alt="" /><img src="' + settings.img_directory + 'Engine_RPM.svg" class="box" alt="" /><div class="speed box"><img src="' + settings.img_directory + 'fi_needle.svg" class="box" alt="" /></div><div class="mechanics box"><img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" /></div></div>');
+					//_setAirSpeed(settings.airspeed);
+					break
 				case 'RPM':
 					$(this).html('' +
 						'<div class="instrument RPM">' +
@@ -87,7 +91,7 @@
 						'		<img src="' + settings.img_directory + 'fi_circle.svg" class="box" alt="" />' +
 						'	</div>' +
 						'</div>');
-					_setAirSpeed(settings.airspeed);
+					//_setAirSpeed(settings.airspeed);
 					break
 				case 'altimeter':
 					$(this).html('' +

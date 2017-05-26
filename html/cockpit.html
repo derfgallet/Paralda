@@ -88,6 +88,7 @@
             <span id="variometer"></span>
             <span id="attitude"></span>
             <span id="airspeed"></span>
+            <span id="Engine_RPM"></span>
             <span id="RPM"></span>
         </div>
         <div>
@@ -108,6 +109,7 @@
     <script type="text/javascript">
         // Dynamic examples
         var attitude = $.flightIndicator('#attitude', 'attitude', {roll:50, pitch:-20, size:200, showBox : false});
+        var Engine_RPM = $.flightIndicator('#Engine_RPM', 'Engine_RPM', {showBox: false});
         //var heading = $.flightIndicator('#heading', 'heading', {heading:150, showBox:false});
         //var variometer = $.flightIndicator('#variometer', 'variometer', {vario:-5, showBox:false});
         //var airspeed = $.flightIndicator('#airspeed', 'airspeed', {showBox: false});
