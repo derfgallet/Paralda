@@ -12,7 +12,7 @@ var Gyro=null;
 var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
 var SSM=require('./SSM3');
-var Platform="Rpi";
+var Platform="Laptop";
 
 function start(httpServer) {
     _socket = require('socket.io')(httpServer);
