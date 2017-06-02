@@ -108,7 +108,8 @@ function _SSMClose(){
     _PortOpen=false;
 }
 
-function _SSMInit(socket){
+function _SSMInit(socket,Platform){
+
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
