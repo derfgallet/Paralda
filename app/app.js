@@ -18,6 +18,8 @@ function run(){
     var app = express();
     var server = require('http').Server(app);
     var compression = require('compression');
+
+
     var io = require('./websocket').start(server);
 
 
