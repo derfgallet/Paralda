@@ -33,7 +33,7 @@ var _ECUBusy=false;
 var _CurrentQuery=null;
 var _CurrentTask="";
 var _DumpArray=[];
-
+var _DumpFile="";
 
 function PadHex(str)
 {
@@ -65,7 +65,6 @@ function _SSMInit(socket,Platform){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
                         _StopECU();
-                        console.log(_DumpArray);
                         return;
                     }
                     var ReturnedHexValue = data.toString('hex').substr(4,2);
@@ -118,11 +117,16 @@ function _SSMClose(){
     _PortOpen=false;
 }
 
-function _SSMDump(FromAddr,ToAddr) {
+function _SSMDump(FromAddr,ToAddr,ToFile) {
     console.log('Sending ECU Init & GetId Buffers ...');
     var i=0;
 
     _CurrentTask="DUMP";
+    if (ToFile=="")
+        _DumpFile="Dump";
+    else
+        _DumpFile=ToFile;
+
     _StopECU();
 
     _DumpArray=[];
@@ -150,9 +154,15 @@ function _ProcessQueue()
         if (!next)
         {
             _ECUBusy=false;
-            console.log('Queue finished.');
-            var myJsonString = JSON.stringify(_DumpArray);
-            console.log(myJsonString);
+
+            if (_CurrentTask=="DUMP")
+            {
+                var jsonfile = require('jsonfile');
+                var file = './app/data/'+_DumpFile+'.json';
+                jsonfile.writeFile(file, _DumpArray,{spaces: 2},function(err){console.log(err);});
+                console.log('DUMP finished.');
+            } else console.log('Queue finished.');
+
         }
         else _Port.write(new Buffer('78' + next + '00', 'hex'));
     }

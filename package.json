@@ -8,10 +8,12 @@
     "basic-auth": "^1.1.0",
     "compression": "^1.6.2",
     "express": "^4.14.0",
-    "socket.io": "^1.7.3",
+    "jsonfile": "^3.0.0",
     "rpio": "^0.9.16",
     "serialport": "^4.0.7",
-    "sleep": "*"
+    "sleep": "*",
+    "socket.io": "^1.7.3",
+    "jsonfile":"^3.0.0"
   },
   "devDependencies": {},
   "author": "Fred.G",

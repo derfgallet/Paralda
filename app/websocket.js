@@ -27,7 +27,7 @@ function _Start(httpServer) {
 
         // MPU6050 Driver
         i2c = require('i2c-bus');
-        var address = 0x68;
+        var address = 0x68; //MPU6050 i2c address
         var i2c1 = i2c.openSync(1);
         MPU6050 = require('./MPU6050');
         Gyro  = new MPU6050(i2c1, address);
@@ -83,9 +83,9 @@ function onConnection(socket) {
     });
 
     socket.on('DUMP',
-        function (FromAddr, ToAddr) {
+        function (FromAddr, ToAddr, ToFile) {
             socket.ParaldaLog('Dump Asked to Server for addresses 0x' + FromAddr.toString(16) + ' to 0x' + ToAddr.toString(16) + '.');
-            SSM.SSMDump(FromAddr, ToAddr)
+            SSM.SSMDump(FromAddr, ToAddr,ToFile)
         });
 
     socket.on('SAVEADDR',
@@ -102,8 +102,8 @@ function _BroadCastData()
 {
     var data = Gyro.readSync();
 
-    SSM.SSMQuery('1338');
-    _Broadcast('room1','DATA',data);
+    //SSM.SSMQuery('1338');
+    //_Broadcast('room1','DATA',data);
 }
 
 
