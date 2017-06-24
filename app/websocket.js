@@ -84,6 +84,19 @@ function onConnection(socket) {
         }
     });
 
+    // Engine Ignition
+    socket.on('IGNITION', function (data) {
+        console.log('Engine Action received %s', data);
+        if (data == 'STOP') {
+            if (Platform == "Rpi")GPIO.StopIgnition();
+            socket.ParaldaLog('Ignition Started.');
+        }
+        else {
+            if (Platform == "Rpi")GPIO.StartIgnition();
+            socket.ParaldaLog('Ignition Stopped.');
+        }
+    });
+
     socket.on('DUMP',
         function (FromAddr, ToAddr, ToFile) {
             socket.ParaldaLog('Dump Asked to Server for addresses 0x' + FromAddr.toString(16) + ' to 0x' + ToAddr.toString(16) + '.');

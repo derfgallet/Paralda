@@ -5,7 +5,9 @@
 module.exports = {
     GPIOInit : _GPIOInit,
     StopEngine : _StopEngine,
-    EnableEngine : _EnableEngine
+    EnableEngine : _EnableEngine,
+    StartIgnition : _StartIgnition(),
+    StopIgnition : _StopIgnition()
 };
 
 var rpio = null;
@@ -37,4 +39,13 @@ function _StopEngine()
 function _EnableEngine()
 {
     if (_Platform=="Rpi") rpio.write(_EngineGPIOPin,rpio.HIGH);
+}
+
+function _StopIgnition() {
+    if (_Platform=="Rpi") rpio.write(_Relay2Pin,rpio.LOW);
+}
+
+function _StartIgnition()
+{
+    if (_Platform=="Rpi") rpio.write(_Relay2Pin,rpio.HIGH);
 }
