@@ -12,35 +12,17 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        // Globals
         var socket = io.connect('/');
 
-        function ParaldaLog(data)
-        {
-            var Log=document.getElementById("ParaldaLog");
-            Log.value = Log.value+data+'\n';
-            Log.scrollTop = Log.scrollHeight+100;
-        }
 
-
-
-        socket.on('DATA',
-                function(data){
-                    //console.log(data);
-                }
-        );
+        // socket messages definition
 
         socket.on('LOG',
                 function(data) {
                     ParaldaLog(data);
                 }
         );
-
-        socket.on('DUMPED', function(addr,val){
-            UpdateDumpLine(addr,val);
-            //ParaldaLog('address: 0x'+addr+' value:'+val+'\n');
-        });
-
-        socket.on('ROMID', function(data){ParaldaLog('RomId : '+data);})
 
         socket.on('ECUCONNECTED',function(){
             var btn=document.getElementById('ConnectBtn');
@@ -49,14 +31,60 @@
             btn.onclick=DisconnectIt;
         });
 
+        socket.on('FILESLIST',function(data){
+            var cbxfile=document.getElementById("cbxFileList");
+            for (var i=0;i<data.length;i++)
+            {
+                if (data[i].indexOf("json")!=-1) {
+                    var opt = document.createElement("option");
+                    opt.text = data[i];
+                    cbxfile.add(opt);
+                }
+            }
+            cbxfile.onchange=function() {
+                if (cbxfile.value=="Fichiers")
+                    cleanDumpTable();
+                else
+                    socket.emit("GETFILE",cbxfile.value,1);
+            };
+        });
+
+        socket.on('FILECONTENT',function(content,id) {
+            cleanDumpTable();
+            for (var i=0; i<content.length;i++)
+            {
+                var dataLine =content[i];
+                addRow(dataLine.Address);
+                UpdateDumpLine(dataLine.Address, dataLine.Value);
+            }
+        });
+
         function ConnectIt() {
             socket.emit('CONNECTECU');
         }
 
         function DisconnectIt()
         {
-                alert('Disconnect');
             socket.emit('DISCONNECTECU');
+        }
+
+        function SaveIt(address){
+            var description = prompt('Description for 0x'+address+' :');
+            socket.emit('SAVEADDR',address,description);
+        }
+
+        function StopIt()
+        {
+            socket.emit('STOPECU');
+        }
+
+
+        // UI functions
+        function ParaldaLog(data)
+        {
+            var Log=document.getElementById("ParaldaLog");
+            Log.value = Log.value+data+'\n';
+            Log.scrollTop = Log.scrollHeight+100;
         }
 
         function addRow(key){
@@ -110,43 +138,9 @@
 
         }
 
-        function SaveIt(address){
-            var description = prompt('Description for 0x'+address+' :');
-            socket.emit('SAVEADDR',address,description);
-        }
 
-        function StopIt()
-        {
-            socket.emit('STOPECU');
-        }
-
+        // Main
         socket.emit('LISTFILES');
-
-        socket.on('FILESLIST',function(data){
-            var cbxfile=document.getElementById("cbxFileList");
-            for (var i=0;i<data.length;i++)
-            {
-                if (data[i].indexOf("json")!=-1) {
-                    var opt = document.createElement("option");
-                    opt.text = data[i];
-                    cbxfile.add(opt);
-                }
-            }
-            cbxfile.onchange=function() {
-                if (cbxfile.value!="Fichiers")
-                    socket.emit("GETFILE",cbxfile.value,1);
-            };
-
-            socket.on('FILECONTENT',function(content,id) {
-                cleanDumpTable();
-                for (var i=0; i<content.length;i++)
-                {
-                    var dataLine =content[i];
-                    addRow(dataLine.Address);
-                    UpdateDumpLine(dataLine.Address, dataLine.Value);
-                }
-            });
-        });
 
     </script>
     </head>

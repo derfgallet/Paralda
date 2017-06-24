@@ -12,8 +12,81 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        // Globals
         var socket = io.connect('/');
 
+        // Socket messages Definition
+
+        socket.on('LOG',
+                function(data) {
+                    ParaldaLog(data);
+                }
+        );
+
+        socket.on('ECUCONNECTED',function(){
+            var btn=document.getElementById('ConnectBtn');
+            var badge=document.getElementById('ConnectBadge');
+            btn.innerHTML="Disconnect";
+            btn.onclick=DisconnectIt;
+        });
+
+        socket.on('FILESLIST',function(data)
+        {
+            var cbxfile1 = document.getElementById("cbxFile1");
+            var cbxfile2 = document.getElementById("cbxFile2");
+
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].indexOf("json") != -1) {
+                    var opt1 = document.createElement("option");
+                    var opt2 = document.createElement("option");
+                    opt1.text = data[i];
+                    cbxfile1.add(opt1);
+                    opt2.text = data[i];
+                    cbxfile2.add(opt2);
+                }
+            }
+
+            cbxfile1.onchange = function () {
+                if (cbxfile1.value != "Fichiers 1")
+                    socket.emit("GETFILE", cbxfile1.value, 1);
+            };
+
+            cbxfile2.onchange = function () {
+                if (cbxfile2.value != "Fichier 2")
+                    socket.emit("GETFILE", cbxfile2.value, 2);
+            };
+        });
+
+        socket.on('FILECONTENT',function(content,id)
+        {
+            if (id==1) cleanDumpTable();
+            for (var i = 0; i < content.length; i++)
+                UpdateDumpLine(content[i].Address, content[i].Value,id);
+        });
+
+        function ConnectIt() {
+            socket.emit('CONNECTECU');
+        }
+
+        function DisconnectIt()
+        {
+                alert('Disconnect');
+            socket.emit('DISCONNECTECU');
+        }
+
+
+        function SaveIt(address){
+            var description = prompt('Description for 0x'+address+' :');
+            socket.emit('SAVEADDR',address,description);
+        }
+
+        function StopIt()
+        {
+            socket.emit('STOPECU');
+        }
+
+
+        // UI functions
         function ParaldaLog(data)
         {
             var Log=document.getElementById("ParaldaLog");
@@ -74,102 +147,8 @@
 
         };
 
-        socket.on('DATA',
-                function(data){
-                    //console.log(data);
-                }
-        );
-
-        socket.on('LOG',
-                function(data) {
-                    ParaldaLog(data);
-                }
-        );
-
-        socket.on('DUMPED', function(addr,val){
-            UpdateDumpLine(addr,val);
-        });
-
-        socket.on('ROMID', function(data){ParaldaLog('RomId : '+data);})
-
-        socket.on('ECUCONNECTED',function(){
-            var btn=document.getElementById('ConnectBtn');
-            var badge=document.getElementById('ConnectBadge');
-            btn.innerHTML="Disconnect";
-            btn.onclick=DisconnectIt;
-        });
-
-        function ConnectIt() {
-            socket.emit('CONNECTECU');
-        }
-
-        function DisconnectIt()
-        {
-                alert('Disconnect');
-            socket.emit('DISCONNECTECU');
-        }
-
-
-
-        function SaveIt(address){
-            var description = prompt('Description for 0x'+address+' :');
-            socket.emit('SAVEADDR',address,description);
-        }
-
-        function StopIt()
-        {
-            socket.emit('STOPECU');
-        }
-
-
+        // Main
         socket.emit('LISTFILES');
-
-        socket.on('FILESLIST',function(data)
-        {
-            var cbxfile1 = document.getElementById("cbxFile1");
-            var cbxfile2 = document.getElementById("cbxFile2");
-
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].indexOf("json") != -1) {
-                    var opt1 = document.createElement("option");
-                    var opt2 = document.createElement("option");
-                    opt1.text = data[i];
-                    cbxfile1.add(opt1);
-                    opt2.text = data[i];
-                    cbxfile2.add(opt2);
-                }
-            }
-
-            cbxfile1.onchange = function () {
-                if (cbxfile1.value != "Fichiers")
-                    socket.emit("GETFILE", cbxfile1.value, 1);
-            };
-
-            cbxfile2.onchange = function () {
-                if (cbxfile2.value != "Fichiers")
-                    socket.emit("GETFILE", cbxfile2.value, 2);
-            };
-        });
-
-        socket.on('FILECONTENT',function(content,id)
-        {
-            if (id==1)
-            {
-                cleanDumpTable();
-                for (var i = 0; i < content.length; i++) {
-                    var dataLine = content[i];
-                    addRow(dataLine.Address);
-                    UpdateDumpLine(dataLine.Address, dataLine.Value,1);
-                }
-            }
-            else
-                for (var i = 0; i < content.length; i++)
-                {
-                    var dataLine = content[i];
-                    UpdateDumpLine(dataLine.Address, dataLine.Value,2);
-                }
-        });
-
     </script>
     </head>
     <body>
