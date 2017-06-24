@@ -3,15 +3,17 @@ module.exports = {
     start: _Start,
     stop : _Stop
 };
+var timers=require('timers');
+var SSM=require('./SSM3');
+var GPIO = require('./GPIO');
+var fs=require('fs');
 
 var _socket = null;
-var timers=require('timers');
 var MPU6050=null;
 var Gyro=null;
 var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
-var SSM=require('./SSM3');
-var GPIO = require('./GPIO');
+
 var Platform="Laptop";
 
 function _Start(httpServer) {
@@ -87,6 +89,25 @@ function onConnection(socket) {
             socket.ParaldaLog('Dump Asked to Server for addresses 0x' + FromAddr.toString(16) + ' to 0x' + ToAddr.toString(16) + '.');
             SSM.SSMDump(FromAddr, ToAddr,ToFile)
         });
+
+    socket.on('LISTFILES',
+        function (){
+            fs.readdir("./app/data", function(err, items)
+            {
+                socket.emit('FILESLIST',items);
+
+            });
+        });
+
+    socket.on('GETFILE',function (filename,id){
+       console.log(filename);
+        // TODO : Send file content
+        var jsonfile = require('jsonfile');
+        var file = './app/data/'+filename;
+        var fileContent=jsonfile.readFileSync(file);
+
+        socket.emit('FILECONTENT',fileContent,id);
+    });
 
     socket.on('SAVEADDR',
         function (address, description) {

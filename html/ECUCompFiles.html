@@ -12,6 +12,8 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        var socket = io.connect('/');
+
         function ParaldaLog(data)
         {
             var Log=document.getElementById("ParaldaLog");
@@ -19,7 +21,58 @@
             Log.scrollTop = Log.scrollHeight+100;
         }
 
-        var socket = io.connect('/');
+        function cleanDumpTable()
+        {
+            var DTable=document.getElementById("DumpTable");
+            var nRow=DTable.rows.length;
+            while (DTable.rows.length >2) {
+                DTable.deleteRow(2);
+            }
+
+        }
+
+        function UpdateDumpLine(addr,value,id){
+            var addrRow=document.getElementById("row"+addr);
+            if (!addrRow)
+            {
+                addRow(addr);
+                var addrRow=document.getElementById("row"+addr);
+            }
+            var DecValue=parseInt(value,16);
+            addrRow.cells[0].innerHTML = '0x' + addr;
+            if (id==1) {
+                addrRow.cells[1].innerHTML = '0x' + value;
+                addrRow.cells[2].innerHTML = DecValue;
+            }
+            else
+            {
+                addrRow.cells[3].innerHTML = '0x' + value;
+                addrRow.cells[4].innerHTML = DecValue;
+            }
+            addrRow.cells[5].innerHTML = parseInt(addrRow.cells[2].innerHTML)-parseInt(addrRow.cells[4].innerHTML);
+            addrRow.cells[5].style.backgroundColor = parseInt(addrRow.cells[5].innerHTML)==0?"white":"red";
+        }
+
+        function addRow(key){
+            var DTable=document.getElementById("DumpTable");
+            var nRow=DTable.rows.length;
+            var NewRow=null;
+
+            NewRow=DTable.insertRow(DTable.rows.length);
+            NewRow.id="row"+key;
+            NewRow.insertCell(0).innerHTML='0x00';
+            NewRow.insertCell(1).innerHTML='0';
+            NewRow.insertCell(2).innerHTML='0';
+            NewRow.insertCell(3).innerHTML='0';
+            NewRow.insertCell(4).innerHTML='0';
+            NewRow.insertCell(5).innerHTML='0';
+            NewRow.insertCell(6).innerHTML="" +
+                    "<button type='button' class='btn btn-default' id='Save" +
+                    key+"' onclick='SaveIt("+key+");'>" +
+                    "<span class='glyphicon glyphicon-floppy-disk'></span>" +
+                    "</button>";
+
+        };
 
         socket.on('DATA',
                 function(data){
@@ -35,7 +88,6 @@
 
         socket.on('DUMPED', function(addr,val){
             UpdateDumpLine(addr,val);
-            //ParaldaLog('address: 0x'+addr+' value:'+val+'\n');
         });
 
         socket.on('ROMID', function(data){ParaldaLog('RomId : '+data);})
@@ -57,24 +109,7 @@
             socket.emit('DISCONNECTECU');
         }
 
-        function UpdateDumpLine(addr,value){
-            var addrRow=document.getElementById("row"+addr);
-            var DecValue=parseInt(value,16);
-            addrRow.cells[1].innerHTML='0x'+value;
-            addrRow.cells[2].innerHTML=DecValue;
-            addrRow.cells[3].innerHTML=Number(DecValue*0.08).toFixed(2);
-            addrRow.cells[4].innerHTML=DecValue*2;
-            addrRow.cells[5].innerHTML=DecValue*25;
-            addrRow.cells[6].innerHTML=DecValue-50;
-            addrRow.cells[7].innerHTML=Number(DecValue*5/256).toFixed(2);
-            addrRow.cells[8].innerHTML=Number(DecValue*100/256).toFixed(2);
-            addrRow.cells[9].innerHTML=Number(DecValue*256/1000).toFixed(2);
-            addrRow.cells[10].innerHTML=Number(DecValue*5000/512).toFixed(2);
-            addrRow.cells[11].innerHTML=Number(DecValue*5000/256).toFixed(2);
-            addrRow.cells[12].innerHTML=DecValue-128;
-            addrRow.cells[13].innerHTML=DecValue*8;
-            addrRow.cells[14].innerHTML=Number((DecValue-128)/85).toFixed(2);
-        }
+
 
         function SaveIt(address){
             var description = prompt('Description for 0x'+address+' :');
@@ -86,40 +121,55 @@
             socket.emit('STOPECU');
         }
 
-        function DumpIt()
+
+        socket.emit('LISTFILES');
+
+        socket.on('FILESLIST',function(data)
         {
-            var DTable=document.getElementById("DumpTable");
-            var nRow=DTable.rows.length;
+            var cbxfile1 = document.getElementById("cbxFile1");
+            var cbxfile2 = document.getElementById("cbxFile2");
 
-            if (nRow>2) // Table need Cleaning
-                for (var delcol=2;delcol<nRow;delcol++)
-                    DTable.deleteRow(2);
-
-            var FromAddress=parseInt(document.getElementById("FromAddr").value,16);
-            var ToAddress=parseInt(document.getElementById("ToAddr").value,16);
-            var JSONFileName = document.getElementById("JSONFileName").value;
-            var CurrAddress = 0;
-            var NewRow=null;
-
-            for (CurrAddress=FromAddress;CurrAddress<=ToAddress;CurrAddress++)
-            {
-                NewRow=DTable.insertRow(DTable.rows.length);
-                NewRow.id="row"+CurrAddress.toString(16);
-                NewRow.insertCell(0).innerHTML='0x'+CurrAddress.toString(16);
-                NewRow.insertCell(1).innerHTML='0';
-                for (var col=2;col<15;col++)
-                {
-                  NewRow.insertCell(col).innerHTML="0";
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].indexOf("json") != -1) {
+                    var opt1 = document.createElement("option");
+                    var opt2 = document.createElement("option");
+                    opt1.text = data[i];
+                    cbxfile1.add(opt1);
+                    opt2.text = data[i];
+                    cbxfile2.add(opt2);
                 }
-                NewRow.insertCell(15).innerHTML="" +
-                        "<button type='button' class='btn btn-default' id='Save" +
-                        CurrAddress.toString(16)+"' onclick='SaveIt("+CurrAddress.toString(16)+");'>" +
-                        "<span class='glyphicon glyphicon-floppy-disk'></span>" +
-                        "</button>";
             }
 
-            socket.emit('DUMP',FromAddress,ToAddress,JSONFileName);
-        }
+            cbxfile1.onchange = function () {
+                if (cbxfile1.value != "Fichiers")
+                    socket.emit("GETFILE", cbxfile1.value, 1);
+            };
+
+            cbxfile2.onchange = function () {
+                if (cbxfile2.value != "Fichiers")
+                    socket.emit("GETFILE", cbxfile2.value, 2);
+            };
+        });
+
+        socket.on('FILECONTENT',function(content,id)
+        {
+            if (id==1)
+            {
+                cleanDumpTable();
+                for (var i = 0; i < content.length; i++) {
+                    var dataLine = content[i];
+                    addRow(dataLine.Address);
+                    UpdateDumpLine(dataLine.Address, dataLine.Value,1);
+                }
+            }
+            else
+                for (var i = 0; i < content.length; i++)
+                {
+                    var dataLine = content[i];
+                    UpdateDumpLine(dataLine.Address, dataLine.Value,2);
+                }
+        });
+
     </script>
     </head>
     <body>
@@ -153,10 +203,6 @@
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
                             <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
-<!--                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
-                            <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
-                            <input class="form-control" type="text" name="JSONFileName" id="JSONFileName" placeholder="To File"/>
-                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button> -->
                             <button class="btn btn-default" type="button" onclick="StopIt();">Stop Flooding !</button>
                         </div>
                     </form>
@@ -172,6 +218,14 @@
             <textarea id="ParaldaLog" cols="280" rows="5"></textarea>
         </div>
     </div>
+    <div style="position:relative;margin:70px;">
+        <select name="thelist" id="cbxFile1">
+            <option>Fichier 1</option>
+        </select>
+        <select name="thelist" id="cbxFile2">
+            <option>Fichier 2</option>
+        </select>
+    </div>
     <div class="table-responsive" style="margin:70px;background-color:#FFFFFF;">
         <div>
             <span class="label label-default">Dump Area</span>
@@ -180,42 +234,15 @@
             <thead>
             <tr style="background-color: #aaaaaa;color: #ffffff">
                 <th align="center">Address</th>
-                <th align="center">Hex</th>
-                <th align="center">N</th>
-                <th align="center">N*0,08</th>
-                <th align="center">N*2</th>
-                <th align="center">N*25</th>
-                <th align="center">N-50</th>
-                <th align="center">N*5/256</th>
-                <th align="center">N*100/256</th>
-                <th align="center">N*256/1000</th>
-                <th align="center">N*5000/512</th>
-                <th align="center">N*5000/256</th>
-                <th align="center">N-128</th>
-                <th align="center">N*8</th>
-                <th align="center">(N-128)/85</th>
+                <th align="center">Hex 1</th>
+                <th align="center">N 1</th>
+                <th align="center">Hex 2</th>
+                <th align="center">N 2</th>
+                <th align="center">diff.</th>
                 <th align="center">Save</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td align="center">Ignition Advance<Br>Knock Correction<br>Engine Load</td>
-                <td align="center">Battery Voltage</td>
-                <td align="center">Vehicule Speed (Km/h)</td>
-                <td align="center">Engine Speed (Rpm)</td>
-                <td align="center">Coolant Temp (°C)</td>
-                <td align="center">Airflow Sensor (V)<Br>Throttle Position Sensor (V)<Br>Boost Solenoid DC (%DC)</td>
-                <td align="center">Injector Pulse Width (ms)</td>
-                <td align="center">ISU Duty Valve (%DC)</td>
-                <td align="center">O2 Average (mV)</td>
-                <td align="center">O2 Min. (mV)<Br>O2 Max. (mV)</td>
-                <td align="center">A/F Correction (%)</td>
-                <td align="center">Atmospheric Pressure (mmHg)</td>
-                <td align="center">Manifold Relative Pressure (Bar)</td>
-                <td align="center"></td>
-            </tr>
             </tbody>
         </table>
     </div>

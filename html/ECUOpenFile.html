@@ -12,6 +12,8 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        var socket = io.connect('/');
+
         function ParaldaLog(data)
         {
             var Log=document.getElementById("ParaldaLog");
@@ -19,7 +21,7 @@
             Log.scrollTop = Log.scrollHeight+100;
         }
 
-        var socket = io.connect('/');
+
 
         socket.on('DATA',
                 function(data){
@@ -57,9 +59,31 @@
             socket.emit('DISCONNECTECU');
         }
 
+        function addRow(key){
+            var DTable=document.getElementById("DumpTable");
+            var nRow=DTable.rows.length;
+            var NewRow=null;
+
+            NewRow=DTable.insertRow(DTable.rows.length);
+            NewRow.id="row"+key;
+            NewRow.insertCell(0).innerHTML='0x00';
+            NewRow.insertCell(1).innerHTML='0';
+            for (var col=2;col<15;col++)
+            {
+                NewRow.insertCell(col).innerHTML="0";
+            }
+            NewRow.insertCell(15).innerHTML="" +
+                    "<button type='button' class='btn btn-default' id='Save" +
+                    key+"' onclick='SaveIt("+key+");'>" +
+                    "<span class='glyphicon glyphicon-floppy-disk'></span>" +
+                    "</button>";
+
+        };
+
         function UpdateDumpLine(addr,value){
             var addrRow=document.getElementById("row"+addr);
             var DecValue=parseInt(value,16);
+            addrRow.cells[0].innerHTML='0x'+addr;
             addrRow.cells[1].innerHTML='0x'+value;
             addrRow.cells[2].innerHTML=DecValue;
             addrRow.cells[3].innerHTML=Number(DecValue*0.08).toFixed(2);
@@ -76,6 +100,16 @@
             addrRow.cells[14].innerHTML=Number((DecValue-128)/85).toFixed(2);
         }
 
+        function cleanDumpTable()
+        {
+            var DTable=document.getElementById("DumpTable");
+            var nRow=DTable.rows.length;
+            while (DTable.rows.length >2) {
+                DTable.deleteRow(2);
+            }
+
+        }
+
         function SaveIt(address){
             var description = prompt('Description for 0x'+address+' :');
             socket.emit('SAVEADDR',address,description);
@@ -86,40 +120,34 @@
             socket.emit('STOPECU');
         }
 
-        function DumpIt()
-        {
-            var DTable=document.getElementById("DumpTable");
-            var nRow=DTable.rows.length;
+        socket.emit('LISTFILES');
 
-            if (nRow>2) // Table need Cleaning
-                for (var delcol=2;delcol<nRow;delcol++)
-                    DTable.deleteRow(2);
-
-            var FromAddress=parseInt(document.getElementById("FromAddr").value,16);
-            var ToAddress=parseInt(document.getElementById("ToAddr").value,16);
-            var JSONFileName = document.getElementById("JSONFileName").value;
-            var CurrAddress = 0;
-            var NewRow=null;
-
-            for (CurrAddress=FromAddress;CurrAddress<=ToAddress;CurrAddress++)
+        socket.on('FILESLIST',function(data){
+            var cbxfile=document.getElementById("cbxFileList");
+            for (var i=0;i<data.length;i++)
             {
-                NewRow=DTable.insertRow(DTable.rows.length);
-                NewRow.id="row"+CurrAddress.toString(16);
-                NewRow.insertCell(0).innerHTML='0x'+CurrAddress.toString(16);
-                NewRow.insertCell(1).innerHTML='0';
-                for (var col=2;col<15;col++)
-                {
-                  NewRow.insertCell(col).innerHTML="0";
+                if (data[i].indexOf("json")!=-1) {
+                    var opt = document.createElement("option");
+                    opt.text = data[i];
+                    cbxfile.add(opt);
                 }
-                NewRow.insertCell(15).innerHTML="" +
-                        "<button type='button' class='btn btn-default' id='Save" +
-                        CurrAddress.toString(16)+"' onclick='SaveIt("+CurrAddress.toString(16)+");'>" +
-                        "<span class='glyphicon glyphicon-floppy-disk'></span>" +
-                        "</button>";
             }
+            cbxfile.onchange=function() {
+                if (cbxfile.value!="Fichiers")
+                    socket.emit("GETFILE",cbxfile.value,1);
+            };
 
-            socket.emit('DUMP',FromAddress,ToAddress,JSONFileName);
-        }
+            socket.on('FILECONTENT',function(content,id) {
+                cleanDumpTable();
+                for (var i=0; i<content.length;i++)
+                {
+                    var dataLine =content[i];
+                    addRow(dataLine.Address);
+                    UpdateDumpLine(dataLine.Address, dataLine.Value);
+                }
+            });
+        });
+
     </script>
     </head>
     <body>
@@ -153,10 +181,6 @@
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
                             <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
-<!--                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
-                            <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
-                            <input class="form-control" type="text" name="JSONFileName" id="JSONFileName" placeholder="To File"/>
-                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button> -->
                             <button class="btn btn-default" type="button" onclick="StopIt();">Stop Flooding !</button>
                         </div>
                     </form>
@@ -171,6 +195,12 @@
         <div >
             <textarea id="ParaldaLog" cols="280" rows="5"></textarea>
         </div>
+    </div>
+    <div style="position:relative;margin:70px;">
+
+        <select name="thelist" id="cbxFileList">
+            <option>Fichiers</option>
+        </select>
     </div>
     <div class="table-responsive" style="margin:70px;background-color:#FFFFFF;">
         <div>

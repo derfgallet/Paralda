@@ -34,6 +34,7 @@ var _CurrentQuery=null;
 var _CurrentTask="";
 var _DumpArray=[];
 var _DumpFile="";
+var _Socket=null;
 
 function PadHex(str)
 {
@@ -42,6 +43,8 @@ function PadHex(str)
 }
 
 function _SSMInit(socket,Platform){
+
+    _Socket=socket;
 
     if (Platform!="Rpi") _SerialPort= require('Virtual-serialport');
 
@@ -70,7 +73,7 @@ function _SSMInit(socket,Platform){
                     var ReturnedHexValue = data.toString('hex').substr(4,2);
                     var ReturnedDecValue = parseInt(ReturnedHexValue,16);
                     var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-                    socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                    //socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
                     _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
                     _ProcessQueue();
                     break;
@@ -161,6 +164,7 @@ function _ProcessQueue()
                 var file = './app/data/'+_DumpFile+'.json';
                 jsonfile.writeFile(file, _DumpArray,{spaces: 2},function(err){console.log(err);});
                 console.log('DUMP finished.');
+                _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
             } else console.log('Queue finished.');
 
         }

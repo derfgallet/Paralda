@@ -34,7 +34,7 @@
         );
 
         socket.on('DUMPED', function(addr,val){
-            UpdateDumpLine(addr,val);
+            //UpdateDumpLine(addr,val);
             //ParaldaLog('address: 0x'+addr+' value:'+val+'\n');
         });
 
@@ -57,30 +57,6 @@
             socket.emit('DISCONNECTECU');
         }
 
-        function UpdateDumpLine(addr,value){
-            var addrRow=document.getElementById("row"+addr);
-            var DecValue=parseInt(value,16);
-            addrRow.cells[1].innerHTML='0x'+value;
-            addrRow.cells[2].innerHTML=DecValue;
-            addrRow.cells[3].innerHTML=Number(DecValue*0.08).toFixed(2);
-            addrRow.cells[4].innerHTML=DecValue*2;
-            addrRow.cells[5].innerHTML=DecValue*25;
-            addrRow.cells[6].innerHTML=DecValue-50;
-            addrRow.cells[7].innerHTML=Number(DecValue*5/256).toFixed(2);
-            addrRow.cells[8].innerHTML=Number(DecValue*100/256).toFixed(2);
-            addrRow.cells[9].innerHTML=Number(DecValue*256/1000).toFixed(2);
-            addrRow.cells[10].innerHTML=Number(DecValue*5000/512).toFixed(2);
-            addrRow.cells[11].innerHTML=Number(DecValue*5000/256).toFixed(2);
-            addrRow.cells[12].innerHTML=DecValue-128;
-            addrRow.cells[13].innerHTML=DecValue*8;
-            addrRow.cells[14].innerHTML=Number((DecValue-128)/85).toFixed(2);
-        }
-
-        function SaveIt(address){
-            var description = prompt('Description for 0x'+address+' :');
-            socket.emit('SAVEADDR',address,description);
-        }
-
         function StopIt()
         {
             socket.emit('STOPECU');
@@ -88,35 +64,9 @@
 
         function DumpIt()
         {
-            var DTable=document.getElementById("DumpTable");
-            var nRow=DTable.rows.length;
-
-            if (nRow>2) // Table need Cleaning
-                for (var delcol=2;delcol<nRow;delcol++)
-                    DTable.deleteRow(2);
-
             var FromAddress=parseInt(document.getElementById("FromAddr").value,16);
             var ToAddress=parseInt(document.getElementById("ToAddr").value,16);
             var JSONFileName = document.getElementById("JSONFileName").value;
-            var CurrAddress = 0;
-            var NewRow=null;
-
-            for (CurrAddress=FromAddress;CurrAddress<=ToAddress;CurrAddress++)
-            {
-                NewRow=DTable.insertRow(DTable.rows.length);
-                NewRow.id="row"+CurrAddress.toString(16);
-                NewRow.insertCell(0).innerHTML='0x'+CurrAddress.toString(16);
-                NewRow.insertCell(1).innerHTML='0';
-                for (var col=2;col<15;col++)
-                {
-                  NewRow.insertCell(col).innerHTML="0";
-                }
-                NewRow.insertCell(15).innerHTML="" +
-                        "<button type='button' class='btn btn-default' id='Save" +
-                        CurrAddress.toString(16)+"' onclick='SaveIt("+CurrAddress.toString(16)+");'>" +
-                        "<span class='glyphicon glyphicon-floppy-disk'></span>" +
-                        "</button>";
-            }
 
             socket.emit('DUMP',FromAddress,ToAddress,JSONFileName);
         }
@@ -134,7 +84,6 @@
                     <ul class="nav navbar-nav navbar-right">
                         <li role="presentation"><a href="cockpit.html">Cockpit </a></li>
                         <li role="presentation"><a href="engine.html">Moteur </a></li>
-                        <li role="presentation"><a href="ECUDump.html">ECU Dump </a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">ECU Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
@@ -153,10 +102,6 @@
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
                             <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
-<!--                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
-                            <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
-                            <input class="form-control" type="text" name="JSONFileName" id="JSONFileName" placeholder="To File"/>
-                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button> -->
                             <button class="btn btn-default" type="button" onclick="StopIt();">Stop Flooding !</button>
                         </div>
                     </form>
@@ -172,52 +117,15 @@
             <textarea id="ParaldaLog" cols="280" rows="5"></textarea>
         </div>
     </div>
-    <div class="table-responsive" style="margin:70px;background-color:#FFFFFF;">
-        <div>
-            <span class="label label-default">Dump Area</span>
-        </div>
-        <table class="table table-bordered" style="background-color:#FFFFFF ;" id="DumpTable">
-            <thead>
-            <tr style="background-color: #aaaaaa;color: #ffffff">
-                <th align="center">Address</th>
-                <th align="center">Hex</th>
-                <th align="center">N</th>
-                <th align="center">N*0,08</th>
-                <th align="center">N*2</th>
-                <th align="center">N*25</th>
-                <th align="center">N-50</th>
-                <th align="center">N*5/256</th>
-                <th align="center">N*100/256</th>
-                <th align="center">N*256/1000</th>
-                <th align="center">N*5000/512</th>
-                <th align="center">N*5000/256</th>
-                <th align="center">N-128</th>
-                <th align="center">N*8</th>
-                <th align="center">(N-128)/85</th>
-                <th align="center">Save</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td align="center">Ignition Advance<Br>Knock Correction<br>Engine Load</td>
-                <td align="center">Battery Voltage</td>
-                <td align="center">Vehicule Speed (Km/h)</td>
-                <td align="center">Engine Speed (Rpm)</td>
-                <td align="center">Coolant Temp (°C)</td>
-                <td align="center">Airflow Sensor (V)<Br>Throttle Position Sensor (V)<Br>Boost Solenoid DC (%DC)</td>
-                <td align="center">Injector Pulse Width (ms)</td>
-                <td align="center">ISU Duty Valve (%DC)</td>
-                <td align="center">O2 Average (mV)</td>
-                <td align="center">O2 Min. (mV)<Br>O2 Max. (mV)</td>
-                <td align="center">A/F Correction (%)</td>
-                <td align="center">Atmospheric Pressure (mmHg)</td>
-                <td align="center">Manifold Relative Pressure (Bar)</td>
-                <td align="center"></td>
-            </tr>
-            </tbody>
-        </table>
+    <div style="position:relative;margin:70px;">
+        <form class="navbar-form navbar-left" target="_self">
+            <div class="form-group">
+                <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
+                <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
+                <input class="form-control" type="text" name="JSONFileName" id="JSONFileName" placeholder="To File"/>
+                <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>
+            </div>
+        </form>
     </div>
     </body>
     </html>
