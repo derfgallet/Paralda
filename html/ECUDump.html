@@ -97,7 +97,6 @@
 
             var FromAddress=parseInt(document.getElementById("FromAddr").value,16);
             var ToAddress=parseInt(document.getElementById("ToAddr").value,16);
-            var JSONFileName = document.getElementById("JSONFileName").value;
             var CurrAddress = 0;
             var NewRow=null;
 
@@ -118,7 +117,7 @@
                         "</button>";
             }
 
-            socket.emit('DUMP',FromAddress,ToAddress,JSONFileName);
+            socket.emit('DUMP',FromAddress,ToAddress,"");
         }
     </script>
     </head>
@@ -153,10 +152,9 @@
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
                             <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
-<!--                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
+                            <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
                             <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
-                            <input class="form-control" type="text" name="JSONFileName" id="JSONFileName" placeholder="To File"/>
-                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button> -->
+                            <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>
                             <button class="btn btn-default" type="button" onclick="StopIt();">Stop Flooding !</button>
                         </div>
                     </form>

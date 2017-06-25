@@ -12,12 +12,13 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
-        var socket = io.connect('/');
+ /*       var socket = io.connect('/');
         socket.on('DATA',
                 function(data){
                     console.log(data);
                 }
-        );
+        );*/
+
     </script>
 </head>
     <body style="background-image:url('./img/subaru.png');background-repeat:no-repeat;background-size: cover;">
@@ -35,7 +36,8 @@
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">ECU Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li><a href="ECUDumpFile.html">Dump</a></li>
+                                <li><a href="ECUDump.html">Simple Dump</a></li>
+                                <li><a href="ECUDumpFile.html">Dump to File</a></li>
                                 <li><a href="ECUOpenFile.html">Open file</a></li>
                                 <li><a href="ECUCompFiles.html">Compare files</a></li>
                                 <li role="separator" class="divider"></li>

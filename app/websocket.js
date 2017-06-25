@@ -14,7 +14,7 @@ var Gyro=null;
 var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
 
-var Platform="Laptop";
+var Platform="Rpi";
 
 function _Start(httpServer) {
     _socket = require('socket.io')(httpServer);
@@ -22,30 +22,30 @@ function _Start(httpServer) {
 
     console.log('\tStarting GPIO driver... ');
 
+    // Initiate GPIO Driver
+    GPIO.GPIOInit(Platform);
+    // Initiate ECU Communication
+    SSM.SSMInit(_socket, Platform);
+
     if (Platform=="Rpi")
     {
         // Enable Engine START
         GPIO.EnableEngine();
+        // Disable Starter
+        GPIO.StopIgnition();
 
         // MPU6050 Driver
         i2c = require('i2c-bus');
         var address = 0x68; //MPU6050 i2c address
         var i2c1 = i2c.openSync(1);
         MPU6050 = require('./MPU6050');
+        console.log("Gyroscope init.");
         Gyro  = new MPU6050(i2c1, address);
-
-        // var data = sensor.readSync();
-        //console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
-        //timers.setInterval(BroadCastData,broadcastDelay);
+        console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
+        timers.setInterval(_BroadCastData,broadcastDelay);
 
     }
-    // Initiate GPIO Driver
-    GPIO.GPIOInit(Platform);
-    // Initiate ECU Communication
-    SSM.SSMInit(_socket, Platform);
-
     console.log('\tStarted');
-
     
 };
 
@@ -86,14 +86,14 @@ function onConnection(socket) {
 
     // Engine Ignition
     socket.on('IGNITION', function (data) {
-        console.log('Engine Action received %s', data);
+        console.log('Ignition received %s', data);
         if (data == 'STOP') {
-            if (Platform == "Rpi")GPIO.StopIgnition();
-            socket.ParaldaLog('Ignition Started.');
+            if (Platform == "Rpi") GPIO.StopIgnition();
+            socket.ParaldaLog('Ignition Stopped.');
         }
         else {
-            if (Platform == "Rpi")GPIO.StartIgnition();
-            socket.ParaldaLog('Ignition Stopped.');
+            if (Platform == "Rpi") GPIO.StartIgnition();
+            socket.ParaldaLog('Ignition in progress.');
         }
     });
 
@@ -137,7 +137,7 @@ function _BroadCastData()
     var data = Gyro.readSync();
 
     //SSM.SSMQuery('1338');
-    //_Broadcast('room1','DATA',data);
+    _Broadcast('room1','DATA',data);
 }
 
 

@@ -46,7 +46,7 @@ function _SSMInit(socket,Platform){
 
     _Socket=socket;
 
-    if (Platform!="Rpi") _SerialPort= require('Virtual-serialport');
+    if (Platform!="Rpi") _SerialPort= require('virtual-serialport');
 
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
@@ -73,8 +73,11 @@ function _SSMInit(socket,Platform){
                     var ReturnedHexValue = data.toString('hex').substr(4,2);
                     var ReturnedDecValue = parseInt(ReturnedHexValue,16);
                     var ReturnedAddress = String(data.toString('hex')).substring(0,4);
-                    //socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
-                    _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
+
+                    if (_DumpFile!="")
+                        _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
+                    else
+                        socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
                     _ProcessQueue();
                     break;
                 default:
@@ -125,11 +128,13 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     var i=0;
 
     _CurrentTask="DUMP";
-    if (ToFile=="")
+    _DumpFile=ToFile;
+
+    /* if (ToFile=="")
         _DumpFile="Dump";
     else
         _DumpFile=ToFile;
-
+*/
     _StopECU();
 
     _DumpArray=[];
@@ -160,9 +165,13 @@ function _ProcessQueue()
 
             if (_CurrentTask=="DUMP")
             {
-                var jsonfile = require('jsonfile');
-                var file = './app/data/'+_DumpFile+'.json';
-                jsonfile.writeFile(file, _DumpArray,{spaces: 2},function(err){console.log(err);});
+                if (_DumpFile!="") {
+                    var jsonfile = require('jsonfile');
+                    var file = './app/data/' + _DumpFile + '.json';
+                    jsonfile.writeFile(file, _DumpArray, {spaces: 2}, function (err) {
+                        console.log(err);
+                    });
+                }
                 console.log('DUMP finished.');
                 _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
             } else console.log('Queue finished.');
