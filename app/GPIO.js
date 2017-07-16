@@ -17,6 +17,10 @@ var _Relay2Pin=18;
 var _Relay3Pin=22;
 var _Relay4Pin=32;
 var _Platform="";
+var _LedPinR=38; // R
+var _LedPinV=33; // V
+var _LedPinB=35; // B
+
 
 function _GPIOInit(Platform)
 {
@@ -28,6 +32,9 @@ function _GPIOInit(Platform)
         rpio.open(_Relay2Pin, rpio.OUTPUT, rpio.HIGH);
         rpio.open(_Relay3Pin, rpio.OUTPUT, rpio.HIGH);
         rpio.open(_Relay4Pin, rpio.OUTPUT, rpio.HIGH);
+        rpio.open(_LedPinR, rpio.OUTPUT, rpio.LOW);
+        rpio.open(_LedPinV, rpio.OUTPUT, rpio.LOW);
+        rpio.open(_LedPinB, rpio.OUTPUT, rpio.HIGH);
     }
 }
 
