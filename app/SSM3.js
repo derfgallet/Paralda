@@ -80,6 +80,10 @@ function _SSMInit(socket,Platform){
                         socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
                     _ProcessQueue();
                     break;
+                case 4 :
+                    socket.emit('LOG','Looping Test !received ' + data);
+                    _ProcessQueue();
+                    break;
                 default:
                     return;
             }
