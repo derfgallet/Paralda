@@ -80,10 +80,6 @@ function _SSMInit(socket,Platform){
                         socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
                     _ProcessQueue();
                     break;
-                case 4 :
-                    socket.emit('LOG','Looping Test !received ' + data);
-                    _ProcessQueue();
-                    break;
                 default:
                     return;
             }
@@ -134,11 +130,6 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     _CurrentTask="DUMP";
     _DumpFile=ToFile;
 
-    /* if (ToFile=="")
-        _DumpFile="Dump";
-    else
-        _DumpFile=ToFile;
-*/
     _StopECU();
 
     _DumpArray=[];
