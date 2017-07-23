@@ -113,7 +113,6 @@ function onConnection(socket) {
         });
 
     socket.on('GETFILE',function (filename,id){
-       console.log(filename);
 
         var jsonfile = require('jsonfile');
         var file = './app/data/'+filename;

@@ -12,12 +12,56 @@
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script>
+        var confFile;
+        var confKeys;
+
+        function ModIt(key,fileContent) {
+            var NewValue = prompt('Nouvelle Valeur pour '+confKeys[key]);
+            var modRow = document.getElementById("row"+confKeys[key]);
+            modRow.cells[1].innerHTML=NewValue;
+
+            socket.emit('MODCONF',confKeys[key],NewValue);
+
+        }
         var socket = io.connect('/');
         socket.on('DATA',
                 function(data){
                     console.log(data);
-                }
-        );
+                });
+
+        socket.on('FILECONTENT',function(fileContent,id){
+
+            confFile=fileContent;
+
+            var DTable=document.getElementById("ParamTable");
+            var nRow=DTable.rows.length;
+
+            if (nRow>2) // Table need Cleaning
+                for (var delcol=2;delcol<nRow;delcol++)
+                    DTable.deleteRow(2);
+
+            var NewRow=null;
+            var mKeys=Object.keys(fileContent);
+            confKeys=mKeys;
+            for (k in mKeys)
+            {
+                // console.log(mKeys[k]);
+                // console.log(fileContent[mKeys[k]]);
+
+                NewRow=DTable.insertRow(DTable.rows.length);
+                NewRow.id="row"+mKeys[k];
+                NewRow.insertCell(0).innerHTML=mKeys[k];
+                NewRow.insertCell(1).innerHTML=fileContent[mKeys[k]];
+                NewRow.insertCell(2).innerHTML="" +
+                        "<button type='button' class='btn btn-default' id='Save" +
+                        mKeys[k]+"' onclick='ModIt("+k+");'>" +
+                        "<span class='glyphicon glyphicon-floppy-disk'></span>" +
+                        "</button>";
+
+            }
+        });
+
+        socket.emit('GETFILE','conf.json');
     </script>
     </head>
     <body style="background-image:url('./img/matrix.png');background-repeat:no-repeat;background-size: cover;">
@@ -60,22 +104,16 @@
     <span class="label label-default">Label</span><span class="badge"></span>
 
     <div class="table-responsive" style="margin:78px;background-color:#FFFFFF;">
-        <table class="table table-bordered" style="background-color:#FFFFFF ;">
+        <table class="table table-bordered" style="background-color:#FFFFFF ;" id="ParamTable">
             <thead>
             <tr >
-                <th>Column 1</th>
-                <th>Column 2</th>
+                <th>Paramétre</th>
+                <th>Valeur</th>
+                <th> </th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>Cell 1</td>
-                <td>Cell 2</td>
-            </tr>
-            <tr>
-                <td>Cell 3</td>
-                <td>Cell 4</td>
-            </tr>
+
             </tbody>
         </table>
     </div>
