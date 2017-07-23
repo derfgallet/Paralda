@@ -83,11 +83,15 @@
     </head>
     <body>
     <div>
-        <nav class="navbar navbar-default navbar-fixed-top navigation-clean">
+        <nav class="navbar navbar-default navbar-fixed-top navigation-clean" role="navigation">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <a class="navbar-brand navbar-link" href="index.html"><img src="./img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
-                    <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"></button>
+                    <a class="navbar-brand navbar-link" href="index.html"><img src="img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
+                    <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
                 </div>
                 <div class="collapse navbar-collapse" id="navcol-1">
                     <ul class="nav navbar-nav navbar-right">
@@ -109,7 +113,11 @@
                         <li role="presentation"><a href="params.html">Paramétres </a></li>
                     </ul>
                     <ul class="nav navbar-nav"></ul>
-                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span> </button>
+                <!--
+                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU
+                        <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"></span>
+                    </button>
+                -->
                 </div>
             </div>
         </nav>

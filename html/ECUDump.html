@@ -127,16 +127,20 @@
             <div class="container-fluid">
                 <div class="navbar-header">
                     <a class="navbar-brand navbar-link" href="index.html"><img src="./img/07-wind-breeze-icon.png">Paralda-DashBoard </a>
-                    <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"></button>
+                    <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
                 </div>
                 <div class="collapse navbar-collapse" id="navcol-1">
                     <ul class="nav navbar-nav navbar-right">
                         <li role="presentation"><a href="cockpit.html">Cockpit </a></li>
                         <li role="presentation"><a href="engine.html">Moteur </a></li>
-                        <li role="presentation"><a href="ECUDump.html">ECU Dump </a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">ECU Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
+                                <li><a href="ECUDump.html">Simple Dump</a></li>
                                 <li><a href="ECUDumpFile.html">Dump</a></li>
                                 <li><a href="ECUOpenFile.html">Open file</a></li>
                                 <li><a href="ECUCompFiles.html">Compare files</a></li>
@@ -151,7 +155,7 @@
                     <ul class="nav navbar-nav"></ul>
                     <form class="navbar-form navbar-left" target="_self">
                         <div class="form-group">
-                            <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>
+                         <!--   <button class="btn btn-default" type="button" id="ConnectBtn" onclick="ConnectIt();">Connect <span class="badge" id="ConnectBadge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"> </span></button>-->
                             <input class="form-control" type="text" name="FromAddr" id="FromAddr" placeholder="From Address (Hex)"/>
                             <input class="form-control" type="text" name="ToAddr" id="ToAddr" placeholder="To Address (Hex)"/>
                             <button class="btn btn-default" type="button" onclick="DumpIt();">Dump !</button>
@@ -162,7 +166,7 @@
             </div>
         </nav>
     </div>
-    <div style="position:relative;margin:70px;">
+    <div style="position:relative;margin-top: 120px;margin-left: 70px;">
         <div>
             <span class="label label-default">Server feedback</span>
         </div>

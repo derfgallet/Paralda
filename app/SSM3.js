@@ -35,6 +35,7 @@ var _CurrentTask="";
 var _DumpArray=[];
 var _DumpFile="";
 var _Socket=null;
+var _RecptBuf;
 
 function PadHex(str)
 {
@@ -48,6 +49,8 @@ function _SSMInit(socket,Platform){
 
     if (Platform!="Rpi") _SerialPort= require('virtual-serialport');
 
+    console.log('Platform:'+Platform);
+
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
 
@@ -56,14 +59,35 @@ function _SSMInit(socket,Platform){
     _Port.on('open',function(){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
-        _Port.on('data', function(data) {
 
+        //var ByteLength=_SerialPort.parsers.byteLength;
+
+        //var parser = _Port.pipe(new ByteLength({length: 3}));
+
+        //parser.on('data',console.log);
+
+        _Port.on('data', function(data) {
+            console.log('Raw Data Received :'+data.toString('hex'));
+            // TODO : Gestion d'un buffer
+            //_RecptBuf=new Buffer(_RecptBuf.toString()+data.toString('hex'));
+            //console.log('RawBuf : '+_RecptBuf);
+            //if (_RecptBuf.size==3)
+            //{
+            //    console.log('Buffer:'+_RecptBuf);
+            //    _RecptBuf=new Buffer.from("");
+            //}
             switch (data.length) {
                 case 1:
+                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
+                    console.log('RecptBuf inter 1: '+_RecptBuf);
                     break;
                 case 2:
+                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
+                    console.log('RecptBuf inter 2: '+_RecptBuf);
+
                     break;
                 case 3:
+                    console.log('Received :'+data.toString('hex'));
                     if (!_CurrentQuery){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
@@ -82,6 +106,12 @@ function _SSMInit(socket,Platform){
                     break;
                 default:
                     return;
+            }
+            if (_RecptBuf.size==3)
+            {
+                console.log('RecptBuf full : '+_RecptBuf);
+                _RecptBuf= new Buffer("");
+
             }
         });
         if (Platform!="Rpi") {
@@ -130,17 +160,14 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     _CurrentTask="DUMP";
     _DumpFile=ToFile;
 
-    /* if (ToFile=="")
-        _DumpFile="Dump";
-    else
-        _DumpFile=ToFile;
-*/
     _StopECU();
-
+    _QueryQueue=[];
     _DumpArray=[];
+    _ECUBusy=false;
 
     for (var i=FromAddr;i<ToAddr+1;i++) {
         _SSMQuery(i.toString(16));
+        console.log('Query : '+i.toString(16));
     }
 
 }
@@ -155,14 +182,20 @@ function _SSMQuery(address) // hex string
 
 function _ProcessQueue()
 {
+
+
     if (_PortOpen)
         {
-        var next=_CurrentQuery = _QueryQueue.shift();
-
+            var next= _QueryQueue.shift();
+            _CurrentQuery = next;
+            console.log('=== ProcessQueue ===')
+            console.log('=> _PortOpen:'+_PortOpen);
+            console.log('=> next :'+next);
+            console.log('=> _ECUBusy :'+_ECUBusy);
+            console.log('=> ');
         if (!next)
         {
             _ECUBusy=false;
-
             if (_CurrentTask=="DUMP")
             {
                 if (_DumpFile!="") {
@@ -177,7 +210,11 @@ function _ProcessQueue()
             } else console.log('Queue finished.');
 
         }
-        else _Port.write(new Buffer('78' + next + '00', 'hex'));
+        else
+        {
+            _Port.write(new Buffer('78' + next + '00', 'hex'));
+            console.log('Write to Port:'+next);
+        }
     }
 }
 
