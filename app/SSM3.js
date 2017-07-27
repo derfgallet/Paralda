@@ -78,8 +78,13 @@ function _SSMInit(socket,Platform){
             //}
             switch (data.length) {
                 case 1:
+                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
+                    console.log('RecptBuf inter 1: '+_RecptBuf);
                     break;
                 case 2:
+                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
+                    console.log('RecptBuf inter 2: '+_RecptBuf);
+
                     break;
                 case 3:
                     console.log('Received :'+data.toString('hex'));
@@ -101,6 +106,12 @@ function _SSMInit(socket,Platform){
                     break;
                 default:
                     return;
+            }
+            if (_RecptBuf.size==3)
+            {
+                console.log('RecptBuf full : '+_RecptBuf);
+                _RecptBuf= new Buffer("");
+
             }
         });
         if (Platform!="Rpi") {
