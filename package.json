@@ -13,7 +13,6 @@
     "serialport": "^4.0.7",
     "sleep": "*",
     "socket.io": "^1.7.3",
-    "virtual-serialport": "*",
     "i2c-bus":"*",
     "virtual-serialport": "^0.3.3"
 

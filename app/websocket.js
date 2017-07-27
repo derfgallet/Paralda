@@ -125,6 +125,10 @@ function onConnection(socket) {
         function (address, description) {
 
         });
+
+    socket.on('STOPECU',function(){
+        SSM.StopECU();
+    });
 }
 
 function _Broadcast(room, event, args) {
