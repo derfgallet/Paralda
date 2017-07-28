@@ -35,7 +35,6 @@ var _CurrentTask="";
 var _DumpArray=[];
 var _DumpFile="";
 var _Socket=null;
-var _RecptBuf;
 
 function PadHex(str)
 {
@@ -43,8 +42,11 @@ function PadHex(str)
     return pad.substring(0, pad.length - str.length) + str;
 }
 
+
+
 function _SSMInit(socket,Platform){
 
+    var buf = new Buffer(0);
     _Socket=socket;
 
     if (Platform!="Rpi") _SerialPort= require('virtual-serialport');
@@ -60,24 +62,15 @@ function _SSMInit(socket,Platform){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
 
-        //var ByteLength=_SerialPort.parsers.byteLength;
-
-        //var parser = _Port.pipe(new ByteLength({length: 3}));
-
-        //parser.on('data',console.log);
-
         _Port.on('data', function(data) {
-            console.log('Raw Data Received :'+data.toString('hex'));
+
+            buf = Buffer.concat([buf,data]);
+            var out= buf.slice(0,3);
+
+            //console.log('Raw Data Received :'+data.toString('hex'));
             // TODO : Gestion d'un buffer
-            //_RecptBuf=new Buffer(_RecptBuf.toString()+data.toString('hex'));
-            //console.log('RawBuf : '+_RecptBuf);
-            //if (_RecptBuf.size==3)
-            //{
-            //    console.log('Buffer:'+_RecptBuf);
-            //    _RecptBuf=new Buffer.from("");
-            //}
-            switch (data.length) {
-                case 1:
+            switch (out.length) {
+/*                case 1:
                     _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
                     console.log('RecptBuf inter 1: '+_RecptBuf);
                     break;
@@ -85,33 +78,29 @@ function _SSMInit(socket,Platform){
                     _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
                     console.log('RecptBuf inter 2: '+_RecptBuf);
 
-                    break;
+                    break;*/
                 case 3:
-                    console.log('Received :'+data.toString('hex'));
+                    //console.log('Received :'+out.toString('hex'));
                     if (!_CurrentQuery){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
                         _StopECU();
                         return;
                     }
-                    var ReturnedHexValue = data.toString('hex').substr(4,2);
+                    var ReturnedHexValue = out.toString('hex').substr(4,2);
                     var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-                    var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+                    var ReturnedAddress = String(out.toString('hex')).substring(0,4);
 
                     if (_DumpFile!="")
                         _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
                     else
                         socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                    buf = new Buffer(0);
                     _ProcessQueue();
+
                     break;
                 default:
                     return;
-            }
-            if (_RecptBuf.size==3)
-            {
-                console.log('RecptBuf full : '+_RecptBuf);
-                _RecptBuf= new Buffer("");
-
             }
         });
         if (Platform!="Rpi") {
@@ -165,10 +154,9 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     _DumpArray=[];
     _ECUBusy=false;
 
-    for (var i=FromAddr;i<ToAddr+1;i++) {
+    for (var i=FromAddr;i<ToAddr+1;i++)
         _SSMQuery(i.toString(16));
-        console.log('Query : '+i.toString(16));
-    }
+
 
 }
 
@@ -188,11 +176,6 @@ function _ProcessQueue()
         {
             var next= _QueryQueue.shift();
             _CurrentQuery = next;
-            console.log('=== ProcessQueue ===')
-            console.log('=> _PortOpen:'+_PortOpen);
-            console.log('=> next :'+next);
-            console.log('=> _ECUBusy :'+_ECUBusy);
-            console.log('=> ');
         if (!next)
         {
             _ECUBusy=false;
@@ -211,10 +194,8 @@ function _ProcessQueue()
 
         }
         else
-        {
             _Port.write(new Buffer('78' + next + '00', 'hex'));
-            console.log('Write to Port:'+next);
-        }
+
     }
 }
 
