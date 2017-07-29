@@ -13,6 +13,10 @@ var MPU6050=null;
 var Gyro=null;
 var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
+var telemetryStatus=false;
+var telemetryData={};
+var broadcastTaskId;
+
 
 var Platform="Rpi";
 
@@ -42,7 +46,7 @@ function _Start(httpServer) {
         console.log("Gyroscope init.");
         Gyro  = new MPU6050(i2c1, address);
         console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
-        timers.setInterval(_BroadCastData,broadcastDelay);
+        broadcastTaskId=timers.setInterval(_BroadCastData,broadcastDelay);
 
     }
     console.log('\tStarted');
@@ -68,10 +72,11 @@ function onConnection(socket) {
 
     socket.on('disconnect', function (data) {
         console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s', socket.request.socket.remoteAddress, socket.id, data);
-
+        telemetryStatus=false;
+        //timers.clearInterval(broadcastTaskId);
     });
 
-    // Engine Emergency Stop
+    // Engine emergency Stop
     socket.on('ENGINE', function (data) {
         console.log('Engine Action received %s', data);
         if (data == 'STOP') {
@@ -129,6 +134,13 @@ function onConnection(socket) {
     socket.on('STOPECU',function(){
         SSM.StopECU();
     });
+
+    socket.on('TELEMETRY',function(Status){
+       if (Status=='ON')
+           telemetryStatus=true;
+        else
+            telemetryStatus=false;
+    });
 }
 
 function _Broadcast(room, event, args) {
@@ -137,10 +149,19 @@ function _Broadcast(room, event, args) {
 
 function _BroadCastData()
 {
-    var data = Gyro.readSync();
+    if (telemetryStatus) {
+        var data = Gyro.readSync();
+        //var SSMT = SSM.SSMTelemetry();
 
-    //SSM.SSMQuery('1338');
-    _Broadcast('room1','DATA',data);
+        //gyroscope data
+        telemetryData.GyroX=parseFloat(data.rotation.x);
+        telemetryData.GyroY=parseFloat(data.rotation.y);
+        // ECU Data
+        // telemetryData.RMP = SST.RPM ?
+
+        //SSM.SSMQuery('1338');
+        _Broadcast('room1', 'DATA', telemetryData);
+    }
 }
 
 

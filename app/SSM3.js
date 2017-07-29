@@ -9,7 +9,8 @@ module.exports = {
     SSMDump: _SSMDump,
     SSMQuery: _SSMQuery,
     SSMClose: _SSMClose,
-    StopECU: _StopECU
+    StopECU: _StopECU,
+    SSMTelemetry: _SSMTelemetry
 };
 
 // Serial Port (FTD1232) Parameters
@@ -63,24 +64,10 @@ function _SSMInit(socket,Platform){
         socket.emit('LOG','Serial Hooked !');
 
         _Port.on('data', function(data) {
-
             buf = Buffer.concat([buf,data]);
             var out= buf.slice(0,3);
-
-            //console.log('Raw Data Received :'+data.toString('hex'));
-            // TODO : Gestion d'un buffer
             switch (out.length) {
-/*                case 1:
-                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
-                    console.log('RecptBuf inter 1: '+_RecptBuf);
-                    break;
-                case 2:
-                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
-                    console.log('RecptBuf inter 2: '+_RecptBuf);
-
-                    break;*/
                 case 3:
-                    //console.log('Received :'+out.toString('hex'));
                     if (!_CurrentQuery){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
@@ -160,6 +147,14 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
 
 }
 
+function _SSMTelemetry()
+{
+    _CurrentTask="TELEMETRY";
+
+    // _SSMQuery(<ECU Address>);
+    //
+}
+
 function _SSMQuery(address) // hex string
 {
     _QueryQueue.push(address);
@@ -190,6 +185,7 @@ function _ProcessQueue()
                 }
                 console.log('DUMP finished.');
                 _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
+                _CurrentTask="";
             } else console.log('Queue finished.');
 
         }
