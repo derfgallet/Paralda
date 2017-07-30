@@ -10,7 +10,8 @@ module.exports = {
     SSMQuery: _SSMQuery,
     SSMClose: _SSMClose,
     StopECU: _StopECU,
-    SSMTelemetry: _SSMTelemetry
+    SSMTelemetry: _SSMTelemetry,
+    SSMTelemetryStop: _SSMTelemetryStop
 };
 
 // Serial Port (FTD1232) Parameters
@@ -36,6 +37,7 @@ var _CurrentTask="";
 var _DumpArray=[];
 var _DumpFile="";
 var _Socket=null;
+var telemetry={};
 
 function PadHex(str)
 {
@@ -81,7 +83,12 @@ function _SSMInit(socket,Platform){
                     if (_DumpFile!="")
                         _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
                     else
-                        socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                        if (_CurrentTask=='TELEMETRY')
+                        {
+                            telemetry[ReturnedAddress]=ReturnedDecValue;
+                        }
+                        else
+                            socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
                     buf = new Buffer(0);
                     _ProcessQueue();
 
@@ -147,13 +154,27 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
 
 }
 
-function _SSMTelemetry()
+function _SSMTelemetry(telemetryConf)
 {
+    var data={};
     _CurrentTask="TELEMETRY";
 
-    // _SSMQuery(<ECU Address>);
-    //
+    for (var addr in telemetryConf)
+    {
+        //console.log('Query : '+ telemetryConf[addr]);
+        _SSMQuery(telemetryConf[addr]);
+        //console.log('Reading :' + telemetry[telemetryConf[addr]]);
+        data[addr]=telemetry[telemetryConf[addr]];
+    }
+
+    return data;
 }
+
+function _SSMTelemetryStop()
+{
+    _QueryQueue=[];
+}
+
 
 function _SSMQuery(address) // hex string
 {
@@ -174,7 +195,7 @@ function _ProcessQueue()
         if (!next)
         {
             _ECUBusy=false;
-            if (_CurrentTask=="DUMP")
+            if (_CurrentTask=="DUMP" || _CurrentTask=="TELEMETRY")
             {
                 if (_DumpFile!="") {
                     var jsonfile = require('jsonfile');
@@ -182,9 +203,9 @@ function _ProcessQueue()
                     jsonfile.writeFile(file, _DumpArray, {spaces: 2}, function (err) {
                         console.log(err);
                     });
+                    _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
                 }
-                console.log('DUMP finished.');
-                _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
+                console.log(_CurrentTask+' finished.');
                 _CurrentTask="";
             } else console.log('Queue finished.');
 

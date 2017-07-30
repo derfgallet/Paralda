@@ -254,6 +254,8 @@
 			var RPMMax = RPMNominal*1.1;
 			var RPMRange = RPMMax-RPMMin;
 			var RPMStep = 90/RPMRange;
+			if (RPM<=RPMMin) RPM=RPMMin;
+			if (RPM>=RPMMax) RPM=RPMMax;
 			var needle = 225 - (RPM-RPMMin)*RPMStep;
 
 			placeholder.each(function(){
@@ -263,15 +265,17 @@
 
 		function _setRRpm(RPM)
 		{
-			// 225 deg is lower bound
-			// 135 deg is upper bound
+			// -45 deg is lower bound
+			// 45 deg is upper bound
 			// 100% RPM is 150 deg
 			var RPMNominal = 595;
 			var RPMMin = RPMNominal*0.5;
 			var RPMMax = RPMNominal*1.1;
 			var RPMRange = RPMMax-RPMMin;
 			var RPMStep = 90/RPMRange;
-			var needle = (RPM-RPMMin)*RPMStep + 45 ;
+			if (RPM<=RPMMin) RPM=RPMMin;
+			if (RPM>=RPMMax) RPM=RPMMax;
+			var needle = (RPM-RPMMin)*RPMStep -45;
 
 			 placeholder.each(function(){
 			 	$(this).find('div.instrument.RPM div.rightNeedle').css('transform', 'rotate(' + needle + 'deg)');

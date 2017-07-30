@@ -40,7 +40,9 @@
                     attitude.setRoll(Math.floor(avgRoll));
                     attitude.setPitch(-Math.floor(avgPitch));
 
-                    //Engine_RPM.setEngineRPM(data.Engine.RPM);
+                    Engine_RPM.setEngineRPM(data.RPM*25);
+                    RPM.setERpm(data.RPM*25);
+                    RPM.setRRpm(Math.floor(data.RPM*25/10));
                 }
         );
 

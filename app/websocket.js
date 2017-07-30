@@ -14,9 +14,8 @@ var Gyro=null;
 var i2c=null;
 var broadcastDelay=100; // delay between 2 broadcasts in ms
 var telemetryStatus=false;
+var telemetryConf={};
 var telemetryData={};
-var broadcastTaskId;
-
 
 var Platform="Rpi";
 
@@ -45,8 +44,10 @@ function _Start(httpServer) {
         MPU6050 = require('./MPU6050');
         console.log("Gyroscope init.");
         Gyro  = new MPU6050(i2c1, address);
+        console.log('Loading Conf. file ...');
+        telemetryConf=loadConf();
         console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
-        broadcastTaskId=timers.setInterval(_BroadCastData,broadcastDelay);
+        timers.setInterval(_BroadCastData,broadcastDelay);
 
     }
     console.log('\tStarted');
@@ -73,7 +74,7 @@ function onConnection(socket) {
     socket.on('disconnect', function (data) {
         console.log('[ParalDa] Client disconnect (ip = %s, socketId = %s) : %s', socket.request.socket.remoteAddress, socket.id, data);
         telemetryStatus=false;
-        //timers.clearInterval(broadcastTaskId);
+        SSM.SSMTelemetryStop();
     });
 
     // Engine emergency Stop
@@ -131,6 +132,20 @@ function onConnection(socket) {
 
         });
 
+    socket.on('MODCONF',
+        function(key,value){
+            var jsonfile = require('jsonfile');
+            var file = './app/data/conf.json';
+            var fileContent=jsonfile.readFileSync(file);
+
+            fileContent[key]=value;
+
+            jsonfile.writeFile(file, fileContent, function (err) {});
+
+            // Reload Conf File for telemetry.
+            loadConf();
+        });
+
     socket.on('STOPECU',function(){
         SSM.StopECU();
     });
@@ -138,9 +153,20 @@ function onConnection(socket) {
     socket.on('TELEMETRY',function(Status){
        if (Status=='ON')
            telemetryStatus=true;
-        else
-            telemetryStatus=false;
+        else {
+           telemetryStatus = false;
+            SSM.SSMTelemetryStop();
+        }
     });
+}
+
+function loadConf()
+{
+    var jsonfile = require('jsonfile');
+    var file = './app/data/conf.json';
+    var fileContent=jsonfile.readFileSync(file);
+
+    return fileContent;
 }
 
 function _Broadcast(room, event, args) {
@@ -151,15 +177,15 @@ function _BroadCastData()
 {
     if (telemetryStatus) {
         var data = Gyro.readSync();
-        //var SSMT = SSM.SSMTelemetry();
+        var SSMT = SSM.SSMTelemetry(telemetryConf);
 
         //gyroscope data
         telemetryData.GyroX=parseFloat(data.rotation.x);
         telemetryData.GyroY=parseFloat(data.rotation.y);
         // ECU Data
-        // telemetryData.RMP = SST.RPM ?
+        telemetryData.RPM = parseInt(SSMT['ECURPMEngine']);
 
-        //SSM.SSMQuery('1338');
+
         _Broadcast('room1', 'DATA', telemetryData);
     }
 }
