@@ -9,7 +9,10 @@ module.exports = {
     SSMDump: _SSMDump,
     SSMQuery: _SSMQuery,
     SSMClose: _SSMClose,
-    StopECU: _StopECU
+    StopECU: _StopECU,
+    SSMTelemetry: _SSMTelemetry,
+    SSMTelemetryStop: _SSMTelemetryStop,
+    reEmit:reEmit
 };
 
 // Serial Port (FTD1232) Parameters
@@ -26,21 +29,32 @@ const _ECUGetId = new Buffer('00464849','hex');
 
 var _SerialPort = require('serialport');
 var _Sleep = require('sleep');
+var SSMTimer= require('timers');
 var _Port = null;
 var _PortOpen=false;
 var _QueryQueue=[];
 var _ECUBusy=false;
 var _CurrentQuery=null;
+var previousQuery=null;
 var _CurrentTask="";
 var _DumpArray=[];
 var _DumpFile="";
 var _Socket=null;
-var _RecptBuf;
+var telemetry={};
+var buf = new Buffer(0);
 
 function PadHex(str)
 {
     var pad = "00";
     return pad.substring(0, pad.length - str.length) + str;
+}
+
+function watchDog()
+{
+    if (_CurrentTask!="")
+        if (_CurrentQuery==previousQuery)
+            reEmit();
+    previousQuery=_CurrentQuery;
 }
 
 function _SSMInit(socket,Platform){
@@ -60,58 +74,51 @@ function _SSMInit(socket,Platform){
         _PortOpen=true;
         socket.emit('LOG','Serial Hooked !');
 
-        //var ByteLength=_SerialPort.parsers.byteLength;
-
-        //var parser = _Port.pipe(new ByteLength({length: 3}));
-
-        //parser.on('data',console.log);
+        // setting a fucking WatchDog
+        SSMTimer.setInterval(watchDog,100);
 
         _Port.on('data', function(data) {
-            console.log('Raw Data Received :'+data.toString('hex'));
-            // TODO : Gestion d'un buffer
-            //_RecptBuf=new Buffer(_RecptBuf.toString()+data.toString('hex'));
-            //console.log('RawBuf : '+_RecptBuf);
-            //if (_RecptBuf.size==3)
-            //{
-            //    console.log('Buffer:'+_RecptBuf);
-            //    _RecptBuf=new Buffer.from("");
-            //}
-            switch (data.length) {
-                case 1:
-                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
-                    console.log('RecptBuf inter 1: '+_RecptBuf);
-                    break;
-                case 2:
-                    _RecptBuf= new Buffer(_RecptBuf.toString()+data.toString());
-                    console.log('RecptBuf inter 2: '+_RecptBuf);
-
-                    break;
+            console.log('currentQuery'+_CurrentQuery);
+            console.log('data='+data.toString('hex'));
+            buf = Buffer.concat([buf,data]);
+            var out= buf.slice(0,3);
+            console.log('out='+out.toString('hex'));
+            switch (out.length) {
                 case 3:
-                    console.log('Received :'+data.toString('hex'));
+                    console.log('==> Good Value');
                     if (!_CurrentQuery){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
                         _StopECU();
                         return;
                     }
-                    var ReturnedHexValue = data.toString('hex').substr(4,2);
+                    var ReturnedHexValue = out.toString('hex').substr(4,2);
                     var ReturnedDecValue = parseInt(ReturnedHexValue,16);
-                    var ReturnedAddress = String(data.toString('hex')).substring(0,4);
+                    var ReturnedAddress = String(out.toString('hex')).substring(0,4);
 
-                    if (_DumpFile!="")
-                        _DumpArray.push({Address:ReturnedAddress,Value:ReturnedHexValue});
+                    if (_DumpFile!="") {
+                        _DumpArray.push({Address: ReturnedAddress, Value: ReturnedHexValue});
+                        console.log('==> Push to file.')
+                    }
                     else
-                        socket.emit('DUMPED',ReturnedAddress,ReturnedHexValue);
+                        if (_CurrentTask=='TELEMETRY')
+                        {
+                            telemetry[ReturnedAddress]=ReturnedDecValue;
+                            console.log('==> Push to telemetry.')
+                        }
+                        else {
+                            console.log('==> Push to Socket.')
+                            socket.emit('DUMPED', ReturnedAddress, ReturnedHexValue);
+                        }
+
+                    console.log('==> buffer before flush = '+buf.toString('hex'));
+                    buf = new Buffer(0);
+                    console.log('==> buffer flushed');
                     _ProcessQueue();
+                    console.log('==> Processqueue done');
                     break;
                 default:
                     return;
-            }
-            if (_RecptBuf.size==3)
-            {
-                console.log('RecptBuf full : '+_RecptBuf);
-                _RecptBuf= new Buffer("");
-
             }
         });
         if (Platform!="Rpi") {
@@ -157,6 +164,7 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     console.log('Sending ECU Init & GetId Buffers ...');
     var i=0;
 
+    buf = new Buffer(0);
     _CurrentTask="DUMP";
     _DumpFile=ToFile;
 
@@ -165,19 +173,45 @@ function _SSMDump(FromAddr,ToAddr,ToFile) {
     _DumpArray=[];
     _ECUBusy=false;
 
-    for (var i=FromAddr;i<ToAddr+1;i++) {
+    for (var i=FromAddr;i<ToAddr+1;i++)
         _SSMQuery(i.toString(16));
-        console.log('Query : '+i.toString(16));
-    }
+
 
 }
 
+function _SSMTelemetry(telemetryConf)
+{
+    var data={};
+    _CurrentTask="TELEMETRY";
+
+    for (var addr in telemetryConf)
+    {
+        //console.log('Query : '+ telemetryConf[addr]);
+        _SSMQuery(telemetryConf[addr]);
+        //console.log('Reading :' + telemetry[telemetryConf[addr]]);
+        data[addr]=telemetry[telemetryConf[addr]];
+    }
+
+    return data;
+}
+
+function _SSMTelemetryStop()
+{
+    _QueryQueue=[];
+}
+
+
 function _SSMQuery(address) // hex string
 {
+    console.log('/// Pushing to Queue = '+address);
     _QueryQueue.push(address);
     if (_ECUBusy || !_PortOpen) return;
     _ECUBusy=true;
     _ProcessQueue();
+}
+function reEmit()
+{
+    _Port.write(new Buffer('78' + _CurrentQuery + '00', 'hex'));
 }
 
 function _ProcessQueue()
@@ -187,16 +221,12 @@ function _ProcessQueue()
     if (_PortOpen)
         {
             var next= _QueryQueue.shift();
+            console.log('*** Next Value = '+next);
             _CurrentQuery = next;
-            console.log('=== ProcessQueue ===')
-            console.log('=> _PortOpen:'+_PortOpen);
-            console.log('=> next :'+next);
-            console.log('=> _ECUBusy :'+_ECUBusy);
-            console.log('=> ');
         if (!next)
         {
             _ECUBusy=false;
-            if (_CurrentTask=="DUMP")
+            if (_CurrentTask=="DUMP" || _CurrentTask=="TELEMETRY")
             {
                 if (_DumpFile!="") {
                     var jsonfile = require('jsonfile');
@@ -204,24 +234,25 @@ function _ProcessQueue()
                     jsonfile.writeFile(file, _DumpArray, {spaces: 2}, function (err) {
                         console.log(err);
                     });
+                    _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
                 }
-                console.log('DUMP finished.');
-                _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
+                console.log(_CurrentTask+' finished.');
+                _CurrentTask="";
             } else console.log('Queue finished.');
 
         }
-        else
-        {
+        else {
+            console.log('*** Write to ECU = '+next);
             _Port.write(new Buffer('78' + next + '00', 'hex'));
-            console.log('Write to Port:'+next);
         }
+
     }
 }
 
 function _StopECU()
 {
     _Port.write(_ECUStop);
-    _Port.write(_ECUStop);
+    console.log('Stop Emit !');
 }
 
 function _GetIdECU()

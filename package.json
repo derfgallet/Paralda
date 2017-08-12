@@ -10,10 +10,9 @@
     "express": "^4.14.0",
     "jsonfile": "^3.0.0",
     "rpio": "^0.9.16",
-    "serialport": "^4.0.7",
+    "serialport": "^5.0.0-beta8",
     "sleep": "*",
     "socket.io": "^1.7.3",
-    "virtual-serialport": "*",
     "i2c-bus":"*",
     "virtual-serialport": "^0.3.3"
 
