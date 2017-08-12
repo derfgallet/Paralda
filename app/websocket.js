@@ -147,8 +147,8 @@ function onConnection(socket) {
         });
 
     socket.on('STOPECU',function(){
-        //SSM.StopECU();
-        SSM.reEmit();
+        SSM.StopECU();
+        //SSM.reEmit();
     });
 
     socket.on('TELEMETRY',function(Status){
