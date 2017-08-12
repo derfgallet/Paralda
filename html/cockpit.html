@@ -13,13 +13,36 @@
     <script src="js/socket.io.min.js"></script>
     <script>
         var socket = io.connect('/');
+        var rollBuf=[];
+        var pitchBuf = [];
+        var sampleNumber=5; // élevé => stabilité mais inertie faible => reactif mais tres sensible
+        var avgPitch=0.0,avgRoll=0.0;
+
         socket.on('DATA',
                 function(data){
-                    //var RcvDta = JSON.parse(data);
-                    //console.log(data.rotation);
-                    attitude.setRoll(Math.floor(data.rotation.x));
-                    attitude.setPitch(-Math.floor(data.rotation.y));
-                    //Engine_RPM.setEngineRPM(data.Engine.RPM);
+                    //console.log(data);
+                    if (rollBuf.length>=sampleNumber)
+                        var dummy = rollBuf.shift();
+                    rollBuf.push(parseFloat(data.GyroX));
+
+                    if (pitchBuf.length>=sampleNumber)
+                        var dummy = pitchBuf.shift();
+                    pitchBuf.push(parseFloat(data.GyroY));
+
+                    for (var i=0;i<rollBuf.length;i++)
+                        avgRoll += rollBuf[i];
+                    avgRoll = avgRoll / rollBuf.length;
+
+                    for (var i=0;i<pitchBuf.length;i++)
+                        avgPitch += pitchBuf[i];
+                    avgPitch = avgPitch / pitchBuf.length;
+
+                    attitude.setRoll(Math.floor(avgRoll));
+                    attitude.setPitch(-Math.floor(avgPitch));
+
+                    Engine_RPM.setEngineRPM(data.RPM*25);
+                    RPM.setERpm(data.RPM*25);
+                    RPM.setRRpm(Math.floor(data.RPM*25/10));
                 }
         );
 
@@ -79,6 +102,9 @@
         {
             socket.emit("IGNITION","STOP");
         }
+
+        socket.emit('TELEMETRY','ON');
+
     </script>
     </head>
     <body>
