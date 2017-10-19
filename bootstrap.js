@@ -1,7 +1,7 @@
 
 
 // App version
-global.version = '0.2';
+global.version = '1.0a';
 
 // Show logo and version
 console.log('ParalDa v' + global.version + ' (using Node.js ' + process.version + ')');

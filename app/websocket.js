@@ -4,7 +4,7 @@ module.exports = {
     stop : _Stop
 };
 var timers=require('timers');
-var SSM=require('./SSM3');
+var SSM=require('./SSM3-1');
 var GPIO = require('./GPIO');
 var fs=require('fs');
 
@@ -45,12 +45,11 @@ function _Start(httpServer) {
         MPU6050 = require('./MPU6050');
         console.log("Gyroscope init.");
         Gyro  = new MPU6050(i2c1, address);
-        console.log('Loading Conf. file ...');
-        telemetryConf=loadConf();
-        console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
-        timers.setInterval(_BroadCastData,broadcastDelay);
-
     }
+    console.log('Loading Conf. file ...');
+    telemetryConf=loadConf();
+    console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
+    timers.setInterval(_BroadCastData,broadcastDelay);
     console.log('\tStarted');
     
 };
@@ -153,9 +152,12 @@ function onConnection(socket) {
     });
 
     socket.on('TELEMETRY',function(Status){
-       if (Status=='ON')
-           telemetryStatus=true;
+       if (Status=='ON') {
+           console.log('***** telemetry ON *****');
+           telemetryStatus = true;
+       }
         else {
+           console.log('***** telemetry OFF *****');
            telemetryStatus = false;
             SSM.SSMTelemetryStop();
         }
@@ -178,17 +180,19 @@ function _Broadcast(room, event, args) {
 function _BroadCastData()
 {
     if (telemetryStatus) {
-        var data = Gyro.readSync();
-        var SSMT = SSM.SSMTelemetry(telemetryConf);
+        if (Platform == "Rpi")
+        {
+            var data = Gyro.readSync();
+            //gyroscope data
+            telemetryData.GyroX=parseFloat(data.rotation.x);
+            telemetryData.GyroY=parseFloat(data.rotation.y);
+        }
 
-        //gyroscope data
-        telemetryData.GyroX=parseFloat(data.rotation.x);
-        telemetryData.GyroY=parseFloat(data.rotation.y);
+        var SSMT = SSM.SSMTelemetry(telemetryConf);
         // ECU Data
         // var str=JSON.stringify(SSMT);
-       // console.log('== SSMT =='+str);
-        telemetryData.RPM = parseInt(SSMT['ECURPMEngine']);
 
+        telemetryData.RPM = parseInt(SSMT['ECURPMEngine']);
 
         _Broadcast('room1', 'DATA', telemetryData);
     }

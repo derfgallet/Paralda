@@ -48,11 +48,9 @@ var _SSMTdata={};
 
 var SinCounter=0;
 
-function degTorad(degree)
-{
-    //var pi=Math.PI;
-    return Math.PI/180*degree;
-}
+function degTorad(degree) {return Math.PI/180*degree;}
+
+function halfSin(degree) {return (Math.sin(degTorad(degree))+1)/2;}
 
 function PadHex(str)
 {
@@ -71,6 +69,8 @@ function watchDog()
 function _SSMInit(socket,Platform){
 
     _Socket=socket;
+    var out=new Buffer(0);
+    SinCounter=0;
 
     if (Platform!="Rpi") _SerialPort= require('virtual-serialport');
 
@@ -88,48 +88,54 @@ function _SSMInit(socket,Platform){
         // setting a fucking WatchDog
         SSMTimer.setInterval(watchDog,100);
 
-        var _Ver='V0';
-        var out=new Buffer(0);
+
 
         _Port.on('data', function(data) {
-            console.log('type of data',typeof data);
-            console.log('currentQuery' + _CurrentQuery);
-            //console.log('data=' + data.toString('hex'));
-            console.log('data=' + data);
-            if (_Ver=='V0') {
-                // A Améliorer pour bien avoir la reponse dés qu'elle apparait ...
-                console.log('=> Creation du buffer out');
-                buf = Buffer.concat([buf, data]);
-                console.log('Slice du buffer');
-                out = buf.slice(0, 3);
-                console.log('out=' + out.toString('hex'));
-
+            if  (_DEBUG) {
+                console.log('currentQuery:' + _CurrentQuery);
+                console.log('data.toString(hex)=', data.toString(16));
+                console.log('taille du buffer', out.length);
+               // console.log('poid fort ',_CurrentQuery.substring(0,2));
+               // console.log('poid faible ',_CurrentQuery.substring(2,4));
+               // if (out.length<2) console.log('_CurrentQuery.substring', _CurrentQuery.substring(out.length * 2,out.length * 2+2));
+            }
+            if (out.length==2) {
+                if  (_DEBUG) console.log('Buffer adress filled.');
+                var dataBuf = new Buffer(1);
+                dataBuf.writeUInt8(data,0);
+                var tmpBuf = Buffer.concat([out,dataBuf]);
+                out = tmpBuf;
             }
             else
-            {
-                console.log('data.toString(hex)=', data.toString(16));
-                console.log('taille du buffer',out.length);
-                console.log('_CurrentQuery.substring', _CurrentQuery.substring(out.length*2,out.length+2));
-
-                if (data.toString(16)==_CurrentQuery.substring(out.length*2,out.length+2))
+                if (data.toString(16)==_CurrentQuery.substring(out.length*2,out.length * 2+2))
                 {
-                    out= Buffer.concat([out, data]);
+                    if (out.length==0) {
+                        out = new Buffer(1);
+                        out.writeUInt8(data, 0);
+                    }
+                    else {
+                       var dataBuf = new Buffer(1);
+                       dataBuf.writeUInt8(data,0);
+                        var tmpBuf = Buffer.concat([out,dataBuf]);
+                        out = tmpBuf;
+
+                        //if  (_DEBUG) console.log('zout = ',zout);
+                    }
                 }
                 else
                 {
-                    out.flush();
+                        out=new Buffer(0);
                 }
-                console.log('out = ',out.toString(16));
-                /*
-                 Si le l'octet recu correspond à l'octet de position sizeof(buf) de l'adresse interrogé (_CurrentQuery)
-                 Alors
-                 on ajoute l'octet au buffer
-                 Sinon
-                 On drop l'octet et le buffer
+            if  (_DEBUG) console.log('out = ',out);
+            /*
+             Si le l'octet recu correspond à l'octet de position sizeof(buf) de l'adresse interrogé (_CurrentQuery)
+             Alors
+             on ajoute l'octet au buffer
+             Sinon
+             On drop l'octet et le buffer
 
 
-                 */
-            }
+             */
             switch (out.length) {
                 case 3:
                     console.log('==> Good Value');
@@ -178,22 +184,18 @@ function _SSMInit(socket,Platform){
                         switch (cmd){
                             case "78" :
                                 //var value = Math.floor((Math.random() * 254) + 1);
-                                var value = Math.floor((Math.sin(degTorad(SinCounter%360))+1)*3500/25);
-                                if (_DEBUG) console.log('Sin Test Value=',value);
+                                var value = Math.floor(halfSin(SinCounter)*6400/25);
+                                if (_DEBUG) console.log('== SinCounter=',SinCounter);
+                                if (_DEBUG) console.log('== Sin Test Value=',value);
 
-                                SinCounter = SinCounter + 5 ;
-                                if (_Ver=='V0') {
-                                    var VSResponse = addr + PadHex(value.toString(16));
-                                    _Port.writeToComputer(new Buffer(VSResponse, 'hex'));
-                                }
-                                else {
-                                    var VSResponse = new Buffer(3);
-                                    VSResponse[0] = parseInt(addr.substring(0, 2), 16);
-                                    VSResponse[1] = parseInt(addr.substring(2, 4), 16);
-                                    VSResponse[2] = value;
-                                    for (var i = 0; i < VSResponse.length; i++)
-                                        _Port.writeToComputer(VSResponse[i]);
-                                }
+                                SinCounter = (SinCounter + 5)%360 ;
+
+                                var VSResponse = new Buffer(3);
+                                VSResponse[0] = parseInt(addr.substring(0, 2), 16);
+                                VSResponse[1] = parseInt(addr.substring(2, 4), 16);
+                                VSResponse[2] = value;
+                                for (var i = 0; i < VSResponse.length; i++)
+                                    _Port.writeToComputer(VSResponse[i]);
                                 console.log('VSResponse size=',VSResponse.length);
                                 break;
                             default:
