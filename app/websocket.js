@@ -17,7 +17,8 @@ var telemetryStatus=false;
 var telemetryConf={};
 var telemetryData={};
 
-var Platform="Rpi";
+//var Platform="Rpi";
+var Platform="laptop";
 
 function _Start(httpServer) {
     _socket = require('socket.io')(httpServer);
@@ -184,6 +185,8 @@ function _BroadCastData()
         telemetryData.GyroX=parseFloat(data.rotation.x);
         telemetryData.GyroY=parseFloat(data.rotation.y);
         // ECU Data
+        // var str=JSON.stringify(SSMT);
+       // console.log('== SSMT =='+str);
         telemetryData.RPM = parseInt(SSMT['ECURPMEngine']);
 
 

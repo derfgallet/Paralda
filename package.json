@@ -14,8 +14,8 @@
     "sleep": "*",
     "socket.io": "^1.7.3",
     "i2c-bus":"*",
-    "virtual-serialport": "^0.3.3"
-
+    "virtual-serialport": "^0.3.3",
+    "timers":"^0.1.1"
   },
   "devDependencies": {},
   "author": "Fred.G",

@@ -1,6 +1,3 @@
 {
-  "ECURPMEngine":1331,
-  "ECUTempH2O":1332,
-  "ECUTempOil":1333,
-  "ECUIntakeManifold":1334
+  "ECURPMEngine":fbe8
 }
