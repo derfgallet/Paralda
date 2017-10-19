@@ -11,36 +11,17 @@
     <script src="js/jquery.flightindicators.js"></script>
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
+    <script src="js/sevenSeg.js"></script>
     <script>
+        var _DEBUG=false;
+
         var socket = io.connect('/');
-        var rollBuf=[];
-        var pitchBuf = [];
-        var sampleNumber=5; // élevé => stabilité mais inertie faible => reactif mais tres sensible
-        var avgPitch=0.0,avgRoll=0.0;
 
         socket.on('DATA',
                 function(data){
-                    console.log(data);
-                    if (rollBuf.length>=sampleNumber)
-                        var dummy = rollBuf.shift();
-                    rollBuf.push(parseFloat(data.GyroX));
-
-                    if (pitchBuf.length>=sampleNumber)
-                        var dummy = pitchBuf.shift();
-                    pitchBuf.push(parseFloat(data.GyroY));
-
-                    for (var i=0;i<rollBuf.length;i++)
-                        avgRoll += rollBuf[i];
-                    avgRoll = avgRoll / rollBuf.length;
-
-                    for (var i=0;i<pitchBuf.length;i++)
-                        avgPitch += pitchBuf[i];
-                    avgPitch = avgPitch / pitchBuf.length;
-
-                    attitude.setRoll(Math.floor(avgRoll));
-                    attitude.setPitch(-Math.floor(avgPitch));
-
-                    //console.log('data.RPM=',data.RPM);
+                    if (_DEBUG) console.log(data);
+                    attitude.setRoll(Math.floor(data.GyroX));
+                    attitude.setPitch(-Math.floor(data.GyroY));
                     Engine_RPM.setEngineRPM(data.RPM*25);
                     RPM.setERpm(data.RPM*25);
                     RPM.setRRpm(Math.floor(data.RPM*25/10));
@@ -49,29 +30,18 @@
 
         socket.on('DUMPED',
         function(address,value){
-            if (address==1338)
-            {
-                Engine_RPM.setEngineRPM(value*50);
-                //console.log('Dumped : '+value*50);
-            }
+            if (_DEBUG) console.log('Dumped message received ...');
         });
 
         socket.on('RROTOR',
                 function(data){
-                    //console.log('Incoming Rotor Rpm message ...');
-                    //console.log(data);
+                    if (_DEBUG) console.log('Incoming Rotor Rpm message received ...');
                 }
         );
-        socket.on('MANIFOLD',
-                function (data) {
-                    //console.log('Incoming Manifold Pressure message ...');
-                    //console.log(data);
-                }
-        );
+
         socket.on('LOG',
                 function(data) {
                     document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
-                    //console.log(data);
                 }
         );
         function EmergencyHit() {
@@ -94,16 +64,6 @@
 
         }
 
-        function Ignite()
-        {
-            socket.emit("IGNITION","START");
-        }
-
-        function StopIgnite()
-        {
-            socket.emit("IGNITION","STOP");
-        }
-
         socket.emit('TELEMETRY','ON');
 
     </script>
@@ -123,7 +83,6 @@
                 <div class="collapse navbar-collapse" id="navcol-1">
                     <ul class="nav navbar-nav navbar-right">
                         <li role="presentation"><a href="cockpit.html">Cockpit </a></li>
-                        <li role="presentation"><a href="engine.html">Moteur </a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">ECU Tools <span class="caret"></span></a>
                             <ul class="dropdown-menu">
@@ -131,20 +90,11 @@
                                 <li><a href="ECUDumpFile.html">Dump to File</a></li>
                                 <li><a href="ECUOpenFile.html">Open file</a></li>
                                 <li><a href="ECUCompFiles.html">Compare files</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">Separated link</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">One more separated link</a></li>
                             </ul>
                         </li>
                         <li role="presentation"><a href="params.html">Paramétres </a></li>
                     </ul>
                     <ul class="nav navbar-nav"></ul>
-                <!--
-                    <button class="btn btn-default navbar-btn" type="button" disabled="disabled">ECU
-                        <span class="badge" style="width:18px;background-color:rgb(249,1,1);padding:0;padding-top:3px;padding-bottom:3px;padding-right:7px;padding-left:7px;"></span>
-                    </button>
-                -->
                 </div>
             </div>
         </nav>
@@ -153,22 +103,12 @@
 
     <div align="center" style="position:relative;top:50px;">
         <div>
-            <span id="variometer"></span>
             <span id="attitude"></span>
-            <span id="airspeed"></span>
             <span id="Engine_RPM"></span>
             <span id="RPM"></span>
         </div>
         <div>
-            <span>
-                <div class="instrument" style="height: 200px; width: 200px;">
-                    <img src="./img/starter.png" class="box" onmousedown="Ignite();" onmouseup="StopIgnite();" ontouchstart="Ignite();" ontouchend="StopIgnite();"/>
-                </div>
-            </span>
             <span id="Emergency" onclick="EmergencyHit();"></span>
-            <span id="altimeter"></span>
-            <span id="heading"></span>
-            <span id="manifold"></span>
         </div>
     </div>
     <div style="position:relative;top:50px;left:10px">
@@ -183,11 +123,6 @@
         // Dynamic examples
         var attitude = $.flightIndicator('#attitude', 'attitude', {roll:50, pitch:-20, size:200, showBox : false});
         var Engine_RPM = $.flightIndicator('#Engine_RPM', 'Engine_RPM', {showBox: false});
-        //var heading = $.flightIndicator('#heading', 'heading', {heading:150, showBox:false});
-        //var variometer = $.flightIndicator('#variometer', 'variometer', {vario:-5, showBox:false});
-        //var airspeed = $.flightIndicator('#airspeed', 'airspeed', {showBox: false});
-        //var altimeter = $.flightIndicator('#altimeter', 'altimeter', {showBox: false});
-        var manifold = $.flightIndicator('#manifold', 'manifold', {showBox: false});
         var RPM = $.flightIndicator('#RPM', 'RPM', {showBox: false});
         var Emergency = $.flightIndicator('#Emergency', 'Emergency', {showBox: true});
     </script>
