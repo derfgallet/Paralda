@@ -12,10 +12,12 @@ var _socket = null;
 var MPU6050=null;
 var Gyro=null;
 var i2c=null;
-var broadcastDelay=100; // delay between 2 broadcasts in ms
+var broadcastDelay=200; // delay between 2 broadcasts in ms
 var telemetryStatus=false;
 var telemetryConf={};
 var telemetryData={};
+
+var _DEBUG=false;
 
 //var Platform="Rpi";
 var Platform="laptop";
@@ -193,6 +195,23 @@ function _BroadCastData()
         // var str=JSON.stringify(SSMT);
 
         telemetryData.RPM = parseInt(SSMT['ECURPMEngine']);
+        telemetryData.BatteryVoltage = parseInt(SSMT['BatteryVoltage']);
+        telemetryData.CoolantTemp = parseInt(SSMT['CoolantTemp']);
+        telemetryData.AirflowSensor = parseInt(SSMT['AirflowSensor']);
+        telemetryData.EngineLoad = parseInt(SSMT['EngineLoad']);
+        telemetryData.ThrottlePosition = parseInt(SSMT['ThrottlePosition']);
+        telemetryData.O2Average = parseInt(SSMT['O2Average']);
+        telemetryData.ExhaustTemp = parseInt(SSMT['ExhaustTemp']);
+
+        /*
+         "":"fbe4",
+         "":"fc0d",
+         "AirflowSensor":"fbe0",
+         "EngineLoad":"fc06",
+         "ThrottlePosition":"fc2b",
+         "O2Average":"fbe3",
+         "ExhaustTemp":"fbe6"
+         */
 
         _Broadcast('room1', 'DATA', telemetryData);
     }

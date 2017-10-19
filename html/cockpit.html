@@ -7,13 +7,15 @@
     <link rel="stylesheet" href="css/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="css/flightindicators.css" />
     <script src="js/jquery/jquery-311.min.js"></script>
+    <script src="js/jqueryui/jquery-ui.min.js"></script>
+    <script src="js/knockout.js"></script>
     <link rel="stylesheet" href="css/Navigation-Clean1.css">
     <script src="js/jquery.flightindicators.js"></script>
     <script src="css/bootstrap/js/bootstrap.min.js"></script>
     <script src="js/socket.io.min.js"></script>
     <script src="js/sevenSeg.js"></script>
     <script>
-        var _DEBUG=false;
+        var _DEBUG=true;
 
         var socket = io.connect('/');
 
@@ -25,6 +27,16 @@
                     Engine_RPM.setEngineRPM(data.RPM*25);
                     RPM.setERpm(data.RPM*25);
                     RPM.setRRpm(Math.floor(data.RPM*25/10));
+                    $("#CoolantTemp").sevenSegArray({value: data.CoolantTemp-50 });
+                    $("#BatteryVoltage").sevenSegArray({ value: data.BatteryVoltage*0.08});
+                    $("#EngineLoad").sevenSegArray({value: data.EngineLoad });
+                    /*
+                     "AirflowSensor":"fbe0",
+                     "EngineLoad":"fc06",
+                     "ThrottlePosition":"fc2b",
+                     "O2Average":"fbe3",
+                     "ExhaustTemp":"fbe6"
+                     */
                 }
         );
 
@@ -44,6 +56,7 @@
                     document.getElementById("ParaldaLog").value = document.getElementById("ParaldaLog").value+data+'\n';
                 }
         );
+
         function EmergencyHit() {
             var CurrentStatus = Emergency.getEmergency();
 
@@ -110,6 +123,20 @@
         <div>
             <span id="Emergency" onclick="EmergencyHit();"></span>
         </div>
+        <div>
+            <div class="instrument">
+                <span class="label label-default">Temp. (°C)</span>
+                <div id="CoolantTemp" style="padding: 0.5em; height: 50px; width: 100px;"></div>
+            </div>
+            <div class="instrument">
+                <span class="label label-default">Charge</span>
+                <div id="EngineLoad" style="padding: 0.5em; height: 50px; width: 100px;"></div>
+            </div>
+            <div class="instrument">
+                <span class="label label-default">Batterie (V)</span>
+                <div id="BatteryVoltage" style="padding: 0.5em; height: 50px; width: 100px;"></div>
+            </div>
+        </div>
     </div>
     <div style="position:relative;top:50px;left:10px">
         <div>
@@ -125,6 +152,11 @@
         var Engine_RPM = $.flightIndicator('#Engine_RPM', 'Engine_RPM', {showBox: false});
         var RPM = $.flightIndicator('#RPM', 'RPM', {showBox: false});
         var Emergency = $.flightIndicator('#Emergency', 'Emergency', {showBox: true});
+
+
+        $("#EngineLoad").sevenSegArray({ digits: 4, value: 0.0 });
+        $("#CoolantTemp").sevenSegArray({ digits: 4, value: 0.0 });
+        $("#BatteryVoltage").sevenSegArray({ digits: 4, value: 0.0});
     </script>
     </body>
     </html>

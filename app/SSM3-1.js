@@ -15,7 +15,7 @@ module.exports = {
     reEmit:reEmit
 };
 
-var _DEBUG=true;
+var _DEBUG=false;
 
 // Serial Port (FTD1232) Parameters
 var _SerialDev='/dev/ttyUSB0';
@@ -74,7 +74,7 @@ function _SSMInit(socket,Platform){
 
     if (Platform!="Rpi") _SerialPort= require('virtual-serialport');
 
-    //console.log('Platform:'+Platform);
+    if  (_DEBUG) console.log('Platform:'+Platform);
 
     _Port=new _SerialPort(_SerialDev,
         {autoOpen: true, baudRate:_SerialBaudRate, parity: _SerialParity, stopBits:_SerialBitStop,dataBits:_SerialDataBits});
@@ -93,7 +93,7 @@ function _SSMInit(socket,Platform){
         _Port.on('data', function(data) {
             if  (_DEBUG) {
                 console.log('currentQuery:' + _CurrentQuery);
-                console.log('data.toString(hex)=', data.toString(16));
+                console.log('data.toString(hex)=', PadHex(data.toString(16)));
                 console.log('taille du buffer', out.length);
                // console.log('poid fort ',_CurrentQuery.substring(0,2));
                // console.log('poid faible ',_CurrentQuery.substring(2,4));
@@ -107,7 +107,7 @@ function _SSMInit(socket,Platform){
                 out = tmpBuf;
             }
             else
-                if (data.toString(16)==_CurrentQuery.substring(out.length*2,out.length * 2+2))
+                if (PadHex(data.toString(16))==_CurrentQuery.substring(out.length*2,out.length * 2+2))
                 {
                     if (out.length==0) {
                         out = new Buffer(1);
@@ -118,8 +118,6 @@ function _SSMInit(socket,Platform){
                        dataBuf.writeUInt8(data,0);
                         var tmpBuf = Buffer.concat([out,dataBuf]);
                         out = tmpBuf;
-
-                        //if  (_DEBUG) console.log('zout = ',zout);
                     }
                 }
                 else
@@ -127,18 +125,10 @@ function _SSMInit(socket,Platform){
                         out=new Buffer(0);
                 }
             if  (_DEBUG) console.log('out = ',out);
-            /*
-             Si le l'octet recu correspond à l'octet de position sizeof(buf) de l'adresse interrogé (_CurrentQuery)
-             Alors
-             on ajoute l'octet au buffer
-             Sinon
-             On drop l'octet et le buffer
 
-
-             */
             switch (out.length) {
                 case 3:
-                    console.log('==> Good Value');
+                    if  (_DEBUG) console.log('==> Good Value');
                     if (!_CurrentQuery){
                         socket.emit('LOG',_CurrentTask+' finished.');
                         _CurrentTask=""
@@ -151,24 +141,24 @@ function _SSMInit(socket,Platform){
 
                     if (_DumpFile!="") {
                         _DumpArray.push({Address: ReturnedAddress, Value: ReturnedHexValue});
-                        console.log('==> Push to file.')
+                        if  (_DEBUG) console.log('==> Push to file.')
                     }
                     else
                         if (_CurrentTask=='TELEMETRY')
                         {
                             telemetry[ReturnedAddress]=ReturnedDecValue;
-                            console.log('==> Push to telemetry.')
+                            if  (_DEBUG) console.log('==> Push to telemetry.')
                         }
                         else {
-                            console.log('==> Push to Socket.')
+                            if  (_DEBUG) console.log('==> Push to Socket.')
                             socket.emit('DUMPED', ReturnedAddress, ReturnedHexValue);
                         }
 
-                    console.log('==> buffer before flush = '+buf.toString('hex'));
                     buf = new Buffer(0);
-                    console.log('==> buffer flushed');
+                    out = new Buffer(0);
+                    if  (_DEBUG) console.log('==> buffer flushed');
                     _ProcessQueue();
-                    console.log('==> Processqueue done');
+                    if  (_DEBUG) console.log('==> Processqueue done');
                     break;
                 default:
                     return;
@@ -183,10 +173,7 @@ function _SSMInit(socket,Platform){
                         var filler = data.toString('hex').substring(6,8);
                         switch (cmd){
                             case "78" :
-                                //var value = Math.floor((Math.random() * 254) + 1);
                                 var value = Math.floor(halfSin(SinCounter)*6400/25);
-                                if (_DEBUG) console.log('== SinCounter=',SinCounter);
-                                if (_DEBUG) console.log('== Sin Test Value=',value);
 
                                 SinCounter = (SinCounter + 5)%360 ;
 
@@ -196,7 +183,6 @@ function _SSMInit(socket,Platform){
                                 VSResponse[2] = value;
                                 for (var i = 0; i < VSResponse.length; i++)
                                     _Port.writeToComputer(VSResponse[i]);
-                                console.log('VSResponse size=',VSResponse.length);
                                 break;
                             default:
                                 return;
@@ -251,7 +237,7 @@ function _SSMTelemetry(telemetryConf)
     {
         _SSMQuery(telemetryConf[addr]);
         _SSMTdata[addr]=telemetry[telemetryConf[addr]];
-        if (_DEBUG) {
+       if (_DEBUG) {
             console.log('-= _SSMTelemetry =- addr=', addr);
             console.log('-= _SSMTelemetry =- telemetryConf=', telemetryConf);
             console.log('-= _SSMTelemetry =- telemetryConf[addr]=', telemetryConf[addr]);
@@ -259,12 +245,8 @@ function _SSMTelemetry(telemetryConf)
             console.log('-= _SSMTelemetry =- telemetry[telemetryConf[addr]]=', telemetry[telemetryConf[addr]]);
             console.log('-= _SSMTelemetry =- data[addr]=', _SSMTdata);
         }
-
     }
 
-   // console.log('-= _SSMTelemetry =- telemetryConf=',telemetryConf);
-   // console.log('-= _SSMTelemetry =- telemetry=',telemetry);
-   // console.log('-= _SSMTelemetry =- data[addr]=',_SSMTdata);
     return _SSMTdata;
 }
 
@@ -276,12 +258,14 @@ function _SSMTelemetryStop()
 
 function _SSMQuery(address) // hex string
 {
-    console.log('/// Pushing to Queue = '+address);
+    if  (_DEBUG) console.log('/// Pushing to Queue = '+address);
     _QueryQueue.push(address);
+    if  (_DEBUG) console.log('/// Queue size :',_QueryQueue.length);
     if (_ECUBusy || !_PortOpen) return;
     _ECUBusy=true;
     _ProcessQueue();
 }
+
 function reEmit()
 {
     _Port.write(new Buffer('78' + _CurrentQuery + '00', 'hex'));
@@ -294,7 +278,7 @@ function _ProcessQueue()
     if (_PortOpen)
         {
             var next= _QueryQueue.shift();
-            console.log('*** Next Value = '+next);
+            if  (_DEBUG) console.log('*** Next Value = '+next);
             _CurrentQuery = next;
         if (!next)
         {
@@ -309,13 +293,13 @@ function _ProcessQueue()
                     });
                     _Socket.emit('LOG',"Dump Finished. Saved to file : "+_DumpFile+".json");
                 }
-                console.log(_CurrentTask+' finished.');
+                if  (_DEBUG) console.log(_CurrentTask+' finished.');
                 _CurrentTask="";
             } else console.log('Queue finished.');
 
         }
         else {
-            console.log('*** Write to ECU = '+next);
+            if  (_DEBUG) console.log('*** Write to ECU = '+next);
             _Port.write(new Buffer('78' + next + '00', 'hex'));
         }
 
@@ -325,7 +309,7 @@ function _ProcessQueue()
 function _StopECU()
 {
     _Port.write(_ECUStop);
-    console.log('Stop Emit !');
+    if  (_DEBUG) console.log('Stop Emit !');
 }
 
 function _GetIdECU()

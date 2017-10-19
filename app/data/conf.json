@@ -1,3 +1,10 @@
 {
-  "ECURPMEngine":"fbe8"
+  "ECURPMEngine":"fbe8",
+  "BatteryVoltage":"fbe4",
+  "CoolantTemp":"fc0d",
+  "AirflowSensor":"fbe0",
+  "EngineLoad":"fc06",
+  "ThrottlePosition":"fc2b",
+  "O2Average":"fbe3",
+  "ExhaustTemp":"fbe6"
 }
