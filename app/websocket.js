@@ -3,6 +3,7 @@ module.exports = {
     start: _Start,
     stop : _Stop
 };
+
 var timers=require('timers');
 var SSM=require('./SSM3-1');
 var GPIO = require('./GPIO');
@@ -16,6 +17,9 @@ var broadcastDelay=100; // delay between 2 broadcasts in ms
 var telemetryStatus=false;
 var telemetryConf={};
 var telemetryData={};
+var KalmanFilter=require('./KalmanFilter');
+var KalmanX=new KalmanFilter;
+var KalmanY=new KalmanFilter;
 
 var _DEBUG=false;
 

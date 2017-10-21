@@ -2,43 +2,43 @@
  * Created by fredericgallet on 21/10/2017.
  */
 
-module.exports = {
-    setAngle: _setAngle,
-    getRate : _getRate,
-    setQangle:_setQangle,
-    setQbias:_setQbias,
-    setRmeasure:_setRmeasure,
-    getQangle:_getQangle,
-    etQbias:_getQbias,
-    getRmeasure:_getRmeasure,
-    getAngle:_getAngle
+function KalmanFilter() {
+    if (!(this instanceof KalmanFilter))
+        return new KalmanFilter();
 
-};
 
-var Q_angle = 0.001;
-var Q_bias = 0.003;
-var R_measure = 0.03;
+    this.Q_angle = 0.001;
+    this.Q_bias = 0.003;
+    this.R_measure = 0.03;
 
-var angle = 0.0; // Reset the angle
-var bias = 0.0; // Reset bias
+    this.angle = 0.0; // Reset the angle
+    this.bias = 0.0; // Reset bias
 
 // Since we assume that the bias is 0 and we know the starting angle (use setAngle), the error
 // covariance matrix is set like so -
 // see: http://en.wikipedia.org/wiki/Kalman_filter#Example_application.2C_technical
 
-var P=[[0.0,0.0],[0.0,0.0]];
+    this.P=[[0.0,0.0],[0.0,0.0]];
+}
 
-function _setAngle(pangle) { angle=pangle; }
-function _getRate() {return rate;}
-function _setQangle(pQangle) {Q_angle=pQangle;}
-function _setQbias(pQbias) {Q_bias=pQbias;}
-function _setRmeasure(pRmeasure) {R_measure=pRmeasure;}
-function _getQangle() {return Q_angle;}
-function _getQbias() {return Q_bias;}
-function _getRmeasure() {return R_measure;}
+KalmanFilter.prototype.setAngle = function (pangle) { angle=pangle; };
+
+KalmanFilter.prototype.getRate = function () {return rate;};
+
+KalmanFilter.prototype.setQangle = function (pQangle) {Q_angle=pQangle;};
+
+KalmanFilter.prototype.setQbias = function (pQbias) {Q_bias=pQbias;};
+
+KalmanFilter.prototype.setRmeasure = function (pRmeasure) {R_measure=pRmeasure;};
+
+KalmanFilter.prototype.getQangle = function () {return Q_angle;};
+
+KalmanFilter.prototype.getQbias = function () {return Q_bias;};
+
+KalmanFilter.prototype.getRmeasure = function () {return R_measure;};
 
 // The angle should be in degrees and the rate should be in degrees per second and the delta time in seconds
-function _getAngle(newAngle,newRate,dt)
+KalmanFilter.prototype.getAngle = function (newAngle,newRate,dt)
 {
     /* Step 1 */
     var rate = newRate - bias;
@@ -78,4 +78,6 @@ function _getAngle(newAngle,newRate,dt)
     P[1][1] -= K[1] * P01_temp;
 
     return angle;
-}
+};
+
+module.exports = KalmanFilter;
