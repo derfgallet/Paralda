@@ -4,6 +4,8 @@ module.exports = {
     stop : _Stop
 };
 
+var _DEBUG=false;
+
 var timers=require('timers');
 var SSM=require('./SSM3-1');
 var GPIO = require('./GPIO');
@@ -17,11 +19,23 @@ var broadcastDelay=100; // delay between 2 broadcasts in ms
 var telemetryStatus=false;
 var telemetryConf={};
 var telemetryData={};
+
+// Kalman Filter Section
 var KalmanFilter=require('./KalmanFilter');
+
 var KalmanX=new KalmanFilter;
 var KalmanY=new KalmanFilter;
+var KalmanTimer=0;
+var KalmanDt=0;
+/* IMU Data */
+var MPUData;
+var accX=0.0, accY=0.0, accZ=0.0;
+var gyroX=0.0, gyroY=0.0, gyroZ=0.0;
+var tempRaw=0.0;
 
-var _DEBUG=false;
+var gyroXangle=0.0, gyroYangle=0.0; // Angle calculate using the gyro only
+var compAngleX=0.0, compAngleY=0.0; // Calculated angle using a complementary filter
+var kalAngleX=0.0, kalAngleY=0.0; // Calculated angle using a Kalman filter
 
 //var Platform="Rpi";
 var Platform="laptop";
@@ -51,13 +65,36 @@ function _Start(httpServer) {
         MPU6050 = require('./MPU6050');
         console.log("Gyroscope init.");
         Gyro  = new MPU6050(i2c1, address);
+        MPUData = Gyro.readSync();
+
+        var roll  = MPUData.rotation.x;
+        var pitch = MPUData.rotation.y;
+
+        KalmanX.setAngle(roll);
+        KalmanY.setAngle(pitch);
+        gyroXangle = roll;
+        gyroYangle = pitch;
+        compAngleX = roll;
+        compAngleY = pitch;
+
     }
+    else
+    {
+        KalmanX.setAngle(0);
+        KalmanY.setAngle(0);
+        gyroXangle = 0;
+        gyroYangle = 0;
+        compAngleX = 0;
+        compAngleY = 0;
+    }
+
     console.log('Loading Conf. file ...');
     telemetryConf=loadConf();
     console.log('\tBroadcasting Data every %d ms ...',broadcastDelay)
     timers.setInterval(_BroadCastData,broadcastDelay);
     console.log('\tStarted');
-    
+
+    KalmanTimer=Date.now();
 };
 
 function _Stop()
@@ -186,6 +223,14 @@ function _Broadcast(room, event, args) {
 function _BroadCastData()
 {
     if (telemetryStatus) {
+/*
+ double dt = (double)(micros() - timer) / 1000000; // Calculate delta time
+ timer = micros();
+ */
+        KalmanDt= (Date.now()-KalmanTimer)/1000;
+        KalmanTimer=Date.now();
+        console.log('KalmanDt=',KalmanDt);
+
         if (Platform == "Rpi")
         {
             var data = Gyro.readSync();
