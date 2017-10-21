@@ -189,6 +189,11 @@ function _BroadCastData()
             telemetryData.GyroX=parseFloat(data.rotation.x);
             telemetryData.GyroY=parseFloat(data.rotation.y);
         }
+        else
+        {
+            telemetryData.GyroX=(Math.random()*20)-10;
+            telemetryData.GyroY=10+(Math.random()*20)-10;
+        }
 
         var SSMT = SSM.SSMTelemetry(telemetryConf);
         // ECU Data
